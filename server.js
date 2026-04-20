@@ -97,6 +97,49 @@ app.get('/api/drive-doc', async (req, res) => {
   }
 });
 
+// ── System prompt ────────────────────────────────────────────────────────────
+
+const SYSTEM_PROMPT_DOCS = [
+  { label: 'voice-guide',   id: '1EJEmC2Yjy5gPu6e22genQpSoI0aZfPEOoYs2UI25qkA' },
+  { label: 'gds-playbook',  id: '1X1lSOTQLtLpLT_f6cTX18PFOpWQe0zIOLAwDb1-kH_0' },
+  { label: 'about-me',      id: '1xGZFKL_9E6gJM3llPF8YhVgvMNxqen8x-uVW94WXzk8' },
+];
+
+const SYSTEM_PROMPT_CACHE_KEY = 'system-prompt';
+
+async function fetchDocAsText(id) {
+  const url = `https://docs.google.com/feeds/download/documents/export/Export?id=${id}&exportFormat=txt`;
+  const response = await axios.get(url, { responseType: 'text' });
+  return response.data;
+}
+
+// GET /api/system-prompt
+// Fetches the three guide docs, concatenates them, and returns the combined
+// string as { systemPrompt }. Cached for 10 minutes.
+app.get('/api/system-prompt', async (_req, res) => {
+  const cached = driveCache.get(SYSTEM_PROMPT_CACHE_KEY);
+  if (cached) {
+    return res.json({ systemPrompt: cached, fromCache: true });
+  }
+
+  try {
+    const sections = await Promise.all(
+      SYSTEM_PROMPT_DOCS.map(async ({ label, id }) => {
+        const text = await fetchDocAsText(id);
+        return `--- ${label} ---\n${text.trim()}`;
+      })
+    );
+
+    const systemPrompt = sections.join('\n\n');
+    driveCache.set(SYSTEM_PROMPT_CACHE_KEY, systemPrompt);
+    res.json({ systemPrompt, fromCache: false });
+  } catch (err) {
+    const status = err.response?.status || 500;
+    const message = err.response?.data || err.message;
+    res.status(status).json({ error: message });
+  }
+});
+
 // ── iMessage ingest ───────────────────────────────────────────────────────────
 
 // GET /api/messages  → returns all stored messages, newest first
