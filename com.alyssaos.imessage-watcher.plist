@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.alyssaos.imessage-watcher</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/local/bin/node</string>
+        <string>/Users/alyssajames/Desktop/alyssa-os-backend/imessage-watcher.js</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/alyssajames/Desktop/alyssa-os-backend</string>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <true/>
+
+    <key>StandardOutPath</key>
+    <string>/Users/alyssajames/Library/Logs/imessage-watcher.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/alyssajames/Library/Logs/imessage-watcher.log</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>NODE_ENV</key>
+        <string>production</string>
+    </dict>
+</dict>
+</plist>

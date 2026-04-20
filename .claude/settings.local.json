@@ -3,7 +3,10 @@
     "allow": [
       "Bash(npm init *)",
       "Bash(/usr/local/bin/node --version)",
-      "Bash(/opt/homebrew/bin/node --version)"
+      "Bash(/opt/homebrew/bin/node --version)",
+      "Bash(command -v node)",
+      "Read(//Users/alyssajames/.nvm/versions/**)",
+      "Bash(chmod +x /Users/alyssajames/Desktop/alyssa-os-backend/install-watcher.sh)"
     ]
   }
 }

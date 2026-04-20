@@ -4,6 +4,14 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
+// node-mac-contacts requires macOS Contacts permission on first run
+let contacts;
+try {
+  contacts = require('node-mac-contacts');
+} catch (e) {
+  console.warn('[imessage-watcher] node-mac-contacts not available — names will not be resolved:', e.message);
+}
+
 const CHAT_DB = path.join(os.homedir(), 'Library/Messages/chat.db');
 const BACKEND_URL = 'https://alyssa-os-backend-production.up.railway.app/api/messages';
 const POLL_INTERVAL_MS = 30_000;
@@ -32,6 +40,47 @@ function queryAll(db, sql, params = []) {
   while (stmt.step()) rows.push(stmt.getAsObject());
   stmt.free();
   return rows;
+}
+
+// Normalise a phone number to digits only for fuzzy matching against contacts
+function normalisePhone(raw) {
+  return (raw ?? '').replace(/\D/g, '');
+}
+
+// Look up a contact name for a given handle id (phone number or email).
+// Returns { sender, name } — sender is always the raw id, name is the resolved
+// display name or null if not found.
+function resolveContact(handleId) {
+  if (!contacts) return { sender: handleId, name: null };
+
+  try {
+    const allContacts = contacts.getAllContacts() ?? [];
+    const needle = normalisePhone(handleId);
+    const isPhone = /^\d{7,}$/.test(needle);
+
+    for (const contact of allContacts) {
+      if (isPhone) {
+        const phones = contact.phoneNumbers ?? [];
+        const match = phones.some(p => normalisePhone(p.value) === needle);
+        if (match) {
+          const name = [contact.firstName, contact.lastName].filter(Boolean).join(' ').trim();
+          return { sender: handleId, name: name || null };
+        }
+      } else {
+        // email-based handle
+        const emails = contact.emailAddresses ?? [];
+        const match = emails.some(e => e.value?.toLowerCase() === handleId.toLowerCase());
+        if (match) {
+          const name = [contact.firstName, contact.lastName].filter(Boolean).join(' ').trim();
+          return { sender: handleId, name: name || null };
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('[imessage-watcher] contacts lookup error:', err.message);
+  }
+
+  return { sender: handleId, name: null };
 }
 
 function resolveSender(db, handleId) {
@@ -64,16 +113,21 @@ async function poll() {
     );
 
     for (const row of rows) {
-      const sender = resolveSender(db, row.handle_id);
+      const rawSender = resolveSender(db, row.handle_id);
+      const { sender, name } = resolveContact(rawSender);
 
       // iMessage stores dates as nanoseconds since 2001-01-01 (Apple epoch)
       const appleEpochOffset = 978307200;
       const timestampMs = (row.date / 1e9 + appleEpochOffset) * 1000;
       const timestamp = new Date(timestampMs).toISOString();
 
+      const payload = { sender, body: row.text, timestamp };
+      if (name) payload.name = name;
+
+      const displayName = name ?? sender;
       try {
-        await axios.post(BACKEND_URL, { sender, body: row.text, timestamp });
-        console.log(`[imessage-watcher] posted ROWID=${row.ROWID} from ${sender}`);
+        await axios.post(BACKEND_URL, payload);
+        console.log(`[imessage-watcher] posted ROWID=${row.ROWID} from ${displayName}`);
       } catch (postErr) {
         console.error(`[imessage-watcher] failed to POST ROWID=${row.ROWID}:`, postErr.message);
       }
