@@ -4,18 +4,35 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
-// node-mac-contacts requires macOS Contacts permission on first run
-let contacts;
-try {
-  contacts = require('node-mac-contacts');
-} catch (e) {
-  console.warn('[imessage-watcher] node-mac-contacts not available — names will not be resolved:', e.message);
-}
-
 const CHAT_DB = path.join(os.homedir(), 'Library/Messages/chat.db');
 const BACKEND_URL = 'https://alyssa-os-backend-production.up.railway.app/api/messages';
 const POLL_INTERVAL_MS = 30_000;
 const TEMP_DIR = path.join(os.tmpdir(), 'imessage-watcher');
+
+// Optional local contacts file — maps phone numbers / emails to display names.
+// Format: { "+15551234567": "Mum", "friend@example.com": "Jake" }
+// The file is re-read on every poll so edits take effect without a restart.
+const CONTACTS_FILE = path.join(__dirname, 'contacts.json');
+
+function loadContactsCache() {
+  try {
+    if (fs.existsSync(CONTACTS_FILE)) {
+      return JSON.parse(fs.readFileSync(CONTACTS_FILE, 'utf8'));
+    }
+  } catch (err) {
+    console.warn('[imessage-watcher] could not read contacts.json:', err.message);
+  }
+  return {};
+}
+
+function resolveContact(handleId) {
+  const cache = loadContactsCache();
+  // Try exact match first, then normalised digits-only match for phone numbers
+  const name = cache[handleId]
+    ?? cache[(handleId ?? '').replace(/\D/g, '')]
+    ?? null;
+  return { sender: handleId, name };
+}
 
 let lastSeenRowId = 0;
 
@@ -66,65 +83,6 @@ function queryAll(db, sql, params = []) {
   return rows;
 }
 
-// Normalise a phone number to digits only for fuzzy matching against contacts
-function normalisePhone(raw) {
-  return (raw ?? '').replace(/\D/g, '');
-}
-
-// Look up a contact name for a given handle id (phone number or email).
-// Returns { sender, name } — sender is always the raw id, name is the resolved
-// display name or null if not found.
-// Every failure path returns the fallback so poll() is never interrupted.
-function resolveContact(handleId) {
-  const fallback = { sender: handleId, name: null };
-  if (!contacts) return fallback;
-
-  let allContacts;
-  try {
-    allContacts = contacts.getAllContacts();
-  } catch (err) {
-    console.warn('[imessage-watcher] contacts.getAllContacts() threw:', err.message);
-    return fallback;
-  }
-
-  // Guard against null / non-iterable return values
-  if (!Array.isArray(allContacts)) {
-    console.warn('[imessage-watcher] contacts.getAllContacts() returned non-array:', typeof allContacts);
-    return fallback;
-  }
-
-  try {
-    const needle = normalisePhone(handleId);
-    const isPhone = /^\d{7,}$/.test(needle);
-
-    for (const contact of allContacts) {
-      try {
-        if (isPhone) {
-          const phones = contact.phoneNumbers ?? [];
-          const match = phones.some(p => normalisePhone(p.value) === needle);
-          if (match) {
-            const name = [contact.firstName, contact.lastName].filter(Boolean).join(' ').trim();
-            return { sender: handleId, name: name || null };
-          }
-        } else {
-          const emails = contact.emailAddresses ?? [];
-          const match = emails.some(e => e.value?.toLowerCase() === handleId.toLowerCase());
-          if (match) {
-            const name = [contact.firstName, contact.lastName].filter(Boolean).join(' ').trim();
-            return { sender: handleId, name: name || null };
-          }
-        }
-      } catch (contactErr) {
-        // Skip malformed contact entry, keep scanning
-        console.warn('[imessage-watcher] skipping malformed contact entry:', contactErr.message);
-      }
-    }
-  } catch (err) {
-    console.warn('[imessage-watcher] contact scan error:', err.message);
-  }
-
-  return fallback;
-}
 
 function resolveSender(db, handleId) {
   try {
