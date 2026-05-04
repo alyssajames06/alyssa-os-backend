@@ -16,7 +16,7 @@ const driveCache = new NodeCache({ stdTTL: 600 });
 const DB_PATH = process.env.NODE_ENV === 'production' ? '/data/db.json' : 'db.json';
 const adapter = new FileSync(DB_PATH);
 const db = low(adapter);
-db.defaults({ dismissed: [], messages: [] }).write();
+db.defaults({ dismissed: [] }).write();
 
 app.use(cors({
   origin: 'https://alyssa-james-os.netlify.app',
@@ -138,27 +138,6 @@ app.get('/api/system-prompt', async (_req, res) => {
     const message = err.response?.data || err.message;
     res.status(status).json({ error: message });
   }
-});
-
-// ── iMessage ingest ───────────────────────────────────────────────────────────
-
-// GET /api/messages  → returns all stored messages, newest first
-app.get('/api/messages', (_req, res) => {
-  const messages = db.get('messages').value();
-  res.json({ messages: [...messages].reverse() });
-});
-
-// POST /api/messages  body: { sender, body, timestamp }
-// Called by imessage-watcher.js running locally on your Mac
-app.post('/api/messages', (req, res) => {
-  const { sender, body, timestamp } = req.body;
-  if (!sender || !body || !timestamp) {
-    return res.status(400).json({ error: 'sender, body, and timestamp are required' });
-  }
-
-  const message = { id: Date.now().toString(), sender, body, timestamp };
-  db.get('messages').push(message).write();
-  res.status(201).json({ message });
 });
 
 // ── Gmail proxy (optional convenience) ───────────────────────────────────────
