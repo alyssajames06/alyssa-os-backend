@@ -1,0 +1,2925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Alyssa OS">
+<meta name="theme-color" content="#0D0F14" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F4F1EC" media="(prefers-color-scheme: light)">
+<link rel="manifest" href="data:application/json,{&quot;name&quot;:&quot;Alyssa OS&quot;,&quot;short_name&quot;:&quot;Alyssa OS&quot;,&quot;display&quot;:&quot;standalone&quot;,&quot;background_color&quot;:&quot;#0D0F14&quot;,&quot;theme_color&quot;:&quot;#0D0F14&quot;,&quot;start_url&quot;:&quot;./&quot;,&quot;icons&quot;:[]}">
+<title>Alyssa OS</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%232D3F6B'/><path d='M16 7L22 25H10L16 7Z' stroke='white' stroke-width='1.8' fill='none' stroke-linejoin='round'/><line x1='12' y1='19' x2='20' y2='19' stroke='white' stroke-width='1.8'/></svg>">
+<link href="https://api.fontshare.com/v2/css?f[]=clash-display@400,500,600,700&display=swap" rel="stylesheet">
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!-- Google APIs: gapi + GIS for Gmail/Calendar/Sheets OAuth -->
+<!-- SETUP REQUIRED: Go to console.cloud.google.com
+     Create a project → Enable Gmail API + Calendar API + Google Sheets API + Google Drive API
+     Create OAuth 2.0 credentials (Web Application type)
+     Add your dashboard URL to Authorized JavaScript Origins
+     Replace 'YOUR_GOOGLE_CLIENT_ID' in the script block with your actual client ID -->
+<script>
+  // Safe stubs in case Google scripts load before page script
+  function gapiLoaded(){window._gapiReady=true;if(window._gapiCb)window._gapiCb();}
+  function gisLoaded(){window._gisReady=true;if(window._gisCb)window._gisCb();}
+</script>
+<script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
+<script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
+<style>
+/* ══════════════════════════════════════════════════════════════════
+   CSS VARIABLE SYSTEM
+══════════════════════════════════════════════════════════════════ */
+:root {
+  --bg: #F4F1EC;
+  --surface: #FFFFFF;
+  --surface-elevated: #F9F7F4;
+  --text: #1A1A18;
+  --text2: #6B6860;
+  --text3: #A8A49D;
+  --accent: #2D3F6B;
+  --accent-warm: #C17B2A;
+  --border: #E8E4DC;
+  --success: #2D7A4F;
+  --danger: #C0392B;
+  --font: 'Satoshi', -apple-system, sans-serif;
+  --font-display: 'Clash Display', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+  --radius: 14px;
+  --radius-sm: 8px;
+  --radius-xs: 5px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.1), 0 8px 32px rgba(0,0,0,0.06);
+}
+
+.dark {
+  --bg: #0D0F14;
+  --surface: #151820;
+  --surface-elevated: #1C2030;
+  --text: #F0EDE8;
+  --text2: #A8AEBF;
+  --text3: #7A8099;
+  --accent: #7B9CE8;
+  --accent-warm: #E8A84A;
+  --border: #252A3D;
+  --success: #4CAF80;
+  --danger: #E05A5A;
+  --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.5), 0 8px 32px rgba(0,0,0,0.3);
+}
+
+/* ── Reset ── */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;font-family:var(--font);font-size:14px;line-height:1.6}
+
+/* ── App shell ── */
+body{background:var(--bg);color:var(--text);overflow:hidden}
+.app-mobile{display:flex;height:100vh;height:100dvh;max-width:100%;margin:0 auto;flex-direction:column;background:var(--bg);padding-bottom:env(safe-area-inset-bottom)}
+.app-desktop{display:none;height:100vh;flex-direction:column;}
+.app-desktop.visible{display:flex}
+
+/* ── View toggles ── */
+#view-mobile{display:flex;flex-direction:column;height:100%}
+#view-crm-full{display:none;height:100%}
+
+/* ══════════════════════════════════════════════════════════════════
+   HEADER
+══════════════════════════════════════════════════════════════════ */
+.header{background:var(--accent);padding:16px 18px 14px;border-bottom:none;flex-shrink:0}
+.dark .header{background:#151820}
+.header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px}
+.header-logo{display:flex;align-items:center;gap:10px}
+.header-logo-wordmark{font-family:var(--font-display);font-size:16px;font-weight:600;color:#fff;letter-spacing:-0.02em}
+.header-greeting h1{font-family:var(--font-display);font-size:20px;font-weight:600;color:#fff;letter-spacing:-0.02em}
+.header-greeting p{font-size:11px;color:rgba(255,255,255,0.55);font-family:var(--font-mono);margin-top:2px}
+.header-right{display:flex;align-items:center;gap:8px}
+.header-badge{display:flex;align-items:center;gap:5px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.22);border-radius:20px;padding:4px 10px}
+.header-badge-dot{width:6px;height:6px;border-radius:50%;background:#6fdf9e;animation:pulse 2s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.header-badge-text{font-size:10px;color:rgba(255,255,255,0.85);font-family:var(--font-mono);font-weight:500;text-transform:uppercase;letter-spacing:0.06em}
+
+/* Theme toggle */
+/* Theme toggle pill switch */
+.theme-switch{display:flex;align-items:center;gap:0;cursor:pointer;user-select:none;background:none;border:none;padding:0}
+.theme-switch-label{font-size:11px;font-family:var(--font-mono);color:var(--text3);letter-spacing:0.04em;text-transform:uppercase}
+.theme-switch-track{position:relative;width:44px;height:24px;background:rgba(255,255,255,0.25);border:1.5px solid rgba(255,255,255,0.35);border-radius:100px;transition:background 0.22s ease,border-color 0.22s ease;flex-shrink:0;display:block}
+.dark .theme-switch-track{background:rgba(123,156,232,0.4);border-color:rgba(123,156,232,0.5)}
+.theme-switch-thumb{position:absolute;top:2px;left:2px;width:16px;height:16px;background:#fff;border-radius:50%;transition:transform 0.22s cubic-bezier(.4,0,.2,1),box-shadow 0.18s;box-shadow:0 1px 4px rgba(0,0,0,0.18)}
+.dark .theme-switch-thumb{transform:translateX(18px)}
+#theme-toggle{background:none;border:none;cursor:pointer;padding:0;line-height:1}
+
+/* ── Stat strip ── */
+.stat-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.mini-stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;cursor:default;transition:all 0.18s ease;box-shadow:var(--shadow)}
+.mini-stat:hover{border-color:var(--border)}
+.mini-stat.active-tab{border-color:var(--accent)}
+.mini-stat-n{font-size:20px;font-weight:600;line-height:1;color:var(--text);font-family:var(--font-mono)}
+.mini-stat-n.warn{color:var(--accent-warm)}
+.mini-stat-n.urgent{color:var(--danger)}
+.dark .mini-stat{background:#F4F1EC;border-color:rgba(0,0,0,0.1)}
+.dark .mini-stat-n{color:#1a1a2e}
+.dark .mini-stat-l{color:#555}
+.mini-stat-l{font-size:10px;color:var(--text3);margin-top:3px;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:0.08em;font-weight:500}
+
+/* ══════════════════════════════════════════════════════════════════
+   TABS
+══════════════════════════════════════════════════════════════════ */
+.tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.dark .tabs{background:#F4F1EC;border-bottom-color:rgba(45,63,107,0.2)}
+.dark .tab{color:rgba(45,63,107,0.5)}
+.dark .tab.active{color:#2D3F6B;border-bottom-color:#2D3F6B}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:1;min-width:60px;padding:10px 4px;text-align:center;font-size:11px;font-weight:500;color:var(--text3);cursor:pointer;border-bottom:2.5px solid transparent;margin-bottom:-1px;transition:all 0.18s ease;text-transform:uppercase;letter-spacing:0.08em;font-family:var(--font-mono);position:relative;white-space:nowrap}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--accent);font-weight:700;border-bottom-color:var(--accent)}
+.tab-badge{display:none}
+
+/* ══════════════════════════════════════════════════════════════════
+   PANELS
+══════════════════════════════════════════════════════════════════ */
+#panel-container{flex:1;overflow:hidden;display:flex;flex-direction:column;min-height:0}
+.panels{flex:1;overflow:hidden;position:relative}
+.panel{position:absolute;inset:0;overflow-y:auto;display:none;padding:16px 16px 80px}
+.panel.active{display:block}
+.panel::-webkit-scrollbar{width:3px}
+.panel::-webkit-scrollbar-track{background:transparent}
+.panel::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+/* ── Section labels ── */
+.sec-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em;font-family:var(--font);font-weight:500;margin-bottom:10px;margin-top:4px}
+
+/* ══════════════════════════════════════════════════════════════════
+   EMAIL / MESSAGE CARDS
+══════════════════════════════════════════════════════════════════ */
+.msg-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;overflow:hidden;transition:all 0.18s ease;box-shadow:var(--shadow)}
+.msg-card:hover{box-shadow:var(--shadow-md);transform:translateY(-1px)}
+.msg-card.needs-reply{border-left:3px solid var(--accent-warm)}
+.msg-card.gds{border-left:3px solid var(--accent)}
+.msg-card-head{padding:13px 16px;display:flex;align-items:flex-start;gap:10px;cursor:pointer}
+.msg-avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;margin-top:1px;font-family:var(--font)}
+.msg-body{flex:1;min-width:0}
+.msg-from{font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-family:var(--font)}
+.msg-sub{font-size:12px;color:var(--text2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.msg-snip{font-size:11px;color:var(--text3);margin-top:3px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.msg-time{font-size:10px;color:var(--text3);font-family:var(--font-mono);flex-shrink:0}
+
+/* Tags */
+.tag{display:inline-block;font-size:9px;padding:2px 7px;border-radius:6px;font-family:var(--font);font-weight:600;letter-spacing:0.06em;text-transform:uppercase}
+.tag-gds{background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--accent);border:1px solid color-mix(in srgb,var(--accent) 25%,transparent)}
+.tag-personal{background:color-mix(in srgb,var(--success) 12%,transparent);color:var(--success);border:1px solid color-mix(in srgb,var(--success) 25%,transparent)}
+.tag-action{background:color-mix(in srgb,var(--accent-warm) 12%,transparent);color:var(--accent-warm);border:1px solid color-mix(in srgb,var(--accent-warm) 25%,transparent)}
+.tag-overdue{background:color-mix(in srgb,var(--accent-warm) 12%,transparent);color:var(--accent-warm);border:1px solid color-mix(in srgb,var(--accent-warm) 25%,transparent)}
+
+.msg-card-body{padding:0 16px 16px;display:none}
+.msg-card-body.open{display:block}
+.msg-context{font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:12px;padding:10px 12px;background:var(--surface-elevated);border-radius:var(--radius-sm);border-left:2px solid var(--border)}
+
+/* ── Reply box ── */
+.reply-box{background:var(--surface-elevated);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px}
+.reply-label{font-size:10px;color:var(--text3);margin-bottom:6px;font-family:var(--font);text-transform:uppercase;letter-spacing:0.08em;font-weight:500}
+textarea{width:100%;background:var(--surface-elevated);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:var(--font);font-size:13px;padding:10px 12px;resize:none;height:72px;outline:none;line-height:1.6;transition:border-color 0.18s ease}
+textarea:focus{border-color:var(--accent);background:var(--surface)}
+textarea::placeholder{color:var(--text3)}
+.btn-row{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+
+/* Buttons */
+.btn{font-size:12px;font-weight:500;padding:8px 16px;border-radius:var(--radius-sm);border:1px solid rgba(45,63,107,0.25);background:transparent;color:#2D3F6B;cursor:pointer;font-family:var(--font);transition:all 0.18s ease;white-space:nowrap;letter-spacing:0.01em}
+.btn:hover{background:#2D3F6B;color:#fff;border-color:#2D3F6B;transform:translateY(-1px);box-shadow:var(--shadow)}
+.btn-green{background:transparent;color:#2D3F6B;border-color:rgba(45,63,107,0.25)}
+.btn-green:hover{background:#2D3F6B;color:#fff;border-color:#2D3F6B;transform:translateY(-1px);box-shadow:var(--shadow)}
+.btn-blue{background:transparent;color:#2D3F6B;border-color:rgba(45,63,107,0.25)}
+.btn-blue:hover{background:#2D3F6B;color:#fff;border-color:#2D3F6B;transform:translateY(-1px);box-shadow:var(--shadow)}
+.dark .btn{background:transparent;color:rgba(244,241,236,0.65);border-color:rgba(244,241,236,0.2)}
+.dark .btn:hover{background:rgba(244,241,236,0.12);color:#F4F1EC;border-color:rgba(244,241,236,0.5)}
+.dark .btn-green{background:transparent;color:rgba(244,241,236,0.65);border-color:rgba(244,241,236,0.2)}
+.dark .btn-green:hover{background:rgba(244,241,236,0.12);color:#F4F1EC;border-color:rgba(244,241,236,0.5)}
+.dark .btn-blue{background:transparent;color:rgba(244,241,236,0.65);border-color:rgba(244,241,236,0.2)}
+.dark .btn-blue:hover{background:rgba(244,241,236,0.12);color:#F4F1EC;border-color:rgba(244,241,236,0.5)}
+.btn-amber{background:color-mix(in srgb,var(--accent-warm) 12%,transparent);color:var(--accent-warm);border-color:color-mix(in srgb,var(--accent-warm) 30%,transparent)}
+
+/* ══════════════════════════════════════════════════════════════════
+   TEXTS PANEL
+══════════════════════════════════════════════════════════════════ */
+.sms-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;overflow:hidden;box-shadow:var(--shadow);transition:all 0.18s ease}
+.sms-card:hover{box-shadow:var(--shadow-md);transform:translateY(-1px)}
+.sms-card.unread{border-left:3px solid var(--accent-warm)}
+.sms-header{padding:12px 14px 0;display:flex;align-items:center;justify-content:space-between}
+.sms-from{font-size:13px;font-weight:600;color:var(--text);font-family:var(--font)}
+.sms-time{font-size:10px;color:var(--text3);font-family:var(--font-mono)}
+.sms-bubble-wrap{padding:8px 14px 12px}
+.sms-bubble{background:var(--surface-elevated);border-radius:4px 12px 12px 12px;padding:9px 13px;font-size:13px;line-height:1.5;color:var(--text);display:inline-block;max-width:92%}
+.sms-reply-area{padding:0 14px 12px;border-top:1px solid var(--border);padding-top:10px}
+
+/* ══════════════════════════════════════════════════════════════════
+   LINKEDIN QUICK RESPONSES
+══════════════════════════════════════════════════════════════════ */
+.qr-wrapper{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:var(--shadow)}
+.qr-heading{font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px;font-family:var(--font)}
+.qr-select{width:100%;background:var(--surface-elevated);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:var(--font);font-size:13px;padding:10px 12px;outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%23A8A49D' d='M5 7L0 2h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;transition:border-color 0.18s ease}
+.qr-select:focus{border-color:var(--accent)}
+.qr-preview{margin-top:10px;background:color-mix(in srgb,var(--accent) 6%,transparent);border:1px solid color-mix(in srgb,var(--accent) 20%,transparent);border-radius:var(--radius-sm);padding:12px;font-size:12px;color:var(--text2);line-height:1.7;white-space:pre-wrap;display:none}
+.qr-preview.show{display:block}
+.qr-add{background:var(--surface);border:1px dashed var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+.qr-add-heading{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:10px;font-family:var(--font)}
+.txt-input{width:100%;background:var(--surface-elevated);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:var(--font);font-size:13px;padding:10px 12px;outline:none;transition:border-color 0.18s ease}
+.txt-input:focus{border-color:var(--accent)}
+.txt-input::placeholder{color:var(--text3)}
+
+/* ══════════════════════════════════════════════════════════════════
+   PASTE CARDS
+══════════════════════════════════════════════════════════════════ */
+.paste-card{background:var(--surface);border:1px dashed var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+.paste-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px;font-family:var(--font)}
+.paste-sub{font-size:11px;color:var(--text3);margin-bottom:10px}
+
+/* ══════════════════════════════════════════════════════════════════
+   CRM MOBILE PREVIEW
+══════════════════════════════════════════════════════════════════ */
+.crm-contact-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;overflow:hidden;box-shadow:var(--shadow);transition:all 0.18s ease}
+.crm-contact-card:hover{box-shadow:var(--shadow-md);transform:translateY(-1px)}
+.crm-contact-card.overdue{border-left:3px solid var(--danger)}
+.crm-contact-card.due-today{border-left:3px solid var(--accent-warm)}
+.crm-inner{padding:12px 14px;display:flex;align-items:center;gap:10px}
+.crm-av{width:34px;height:34px;border-radius:50%;background:color-mix(in srgb,var(--accent) 12%,transparent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--accent);flex-shrink:0;border:1px solid color-mix(in srgb,var(--accent) 25%,transparent)}
+.crm-info{flex:1;min-width:0}
+.crm-name{font-size:13px;font-weight:600;color:var(--text)}
+.crm-co{font-size:11px;color:var(--text2);margin-top:1px}
+.crm-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0}
+.crm-due{font-size:10px;font-family:var(--font-mono);font-weight:600}
+.crm-due.red{color:var(--danger)}
+.crm-due.amber{color:var(--accent-warm)}
+.crm-step{font-size:10px;padding:2px 8px;border-radius:20px;background:var(--surface-elevated);color:var(--text3);font-family:var(--font-mono);border:1px solid var(--border)}
+.li-btn-small{width:26px;height:22px;background:#0a66c2;border:none;border-radius:4px;color:#fff;font-size:10px;font-weight:900;cursor:pointer;font-family:Georgia,serif;display:flex;align-items:center;justify-content:center;text-decoration:none}
+.crm-actions-row{padding:0 14px 10px;display:flex;gap:6px;border-top:1px solid var(--border);padding-top:8px}
+.crm-count-row{display:flex;gap:8px;margin-bottom:10px}
+.count-chip{font-size:11px;font-family:var(--font-mono);padding:4px 12px;border-radius:20px;font-weight:600}
+.chip-red{background:color-mix(in srgb,var(--danger) 12%,transparent);color:var(--danger);border:1px solid color-mix(in srgb,var(--danger) 25%,transparent)}
+.chip-amber{background:color-mix(in srgb,var(--accent-warm) 12%,transparent);color:var(--accent-warm);border:1px solid color-mix(in srgb,var(--accent-warm) 25%,transparent)}
+.crm-open-btn{display:block;width:100%;padding:12px;text-align:center;font-size:12px;font-weight:600;color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,transparent);border:1px solid color-mix(in srgb,var(--accent) 20%,transparent);border-radius:var(--radius);cursor:pointer;font-family:var(--font);transition:all 0.18s ease;margin-top:10px}
+.crm-open-btn:hover{background:color-mix(in srgb,var(--accent) 15%,transparent);transform:translateY(-1px)}
+
+/* ══════════════════════════════════════════════════════════════════
+   CALENDAR
+══════════════════════════════════════════════════════════════════ */
+.cal-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+.cal-item{display:flex;gap:12px;align-items:flex-start;padding:13px 16px;border-bottom:1px solid var(--border)}
+.cal-item:last-child{border-bottom:none}
+.cal-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);margin-top:5px;flex-shrink:0}
+.cal-title{font-size:13px;font-weight:600;color:var(--text)}
+.cal-time{font-size:11px;color:var(--text3);margin-top:2px;font-family:var(--font-mono)}
+.empty-note{font-size:12px;color:var(--text3);line-height:1.6;padding:4px 0}
+.cal-day-group{margin-bottom:14px}
+.cal-day-header{font-size:10px;font-weight:600;color:var(--accent);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:0.08em;padding:6px 0;border-bottom:1px solid var(--border);margin-bottom:6px}
+.cal-desc{font-size:11px;color:var(--text3);margin-top:3px;line-height:1.4}
+
+/* ══════════════════════════════════════════════════════════════════
+   FULL CRM VIEW
+══════════════════════════════════════════════════════════════════ */
+#view-crm-full{overflow:hidden}
+.crm-layout{display:flex;height:100%}
+
+/* Sidebar */
+.crm-sidebar{width:220px;background:var(--accent);display:flex;flex-direction:column;flex-shrink:0;position:relative;transition:width .25s;overflow:hidden}
+.dark .crm-sidebar{background:var(--surface)}
+.crm-sidebar.collapsed{width:56px}
+.crm-sidebar.collapsed .nav-label,.crm-sidebar.collapsed .nav-item span:not(.nav-icon),
+.crm-sidebar.collapsed .sb-logo p,.crm-sidebar.collapsed .sb-user-name,
+.crm-sidebar.collapsed .sb-user-role,.crm-sidebar.collapsed .sb-logo h1{display:none}
+.crm-sidebar.collapsed .sb-logo{padding:16px 12px}
+.crm-sidebar.collapsed .nav-item{justify-content:center;padding:10px}
+.crm-sidebar.collapsed .sb-user{justify-content:center}
+.sidebar-toggle{position:absolute;right:-12px;top:24px;width:24px;height:24px;background:var(--surface);border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:10px;color:var(--accent);z-index:20;box-shadow:var(--shadow)}
+.sb-logo{padding:20px 20px 16px;border-bottom:1px solid rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:space-between}
+.dark .sb-logo{border-bottom:1px solid var(--border)}
+.sb-logo h1{font-family:var(--font-display);font-size:17px;color:#fff;font-weight:600;letter-spacing:-0.02em}
+.dark .sb-logo h1{color:var(--text)}
+.sb-logo p{font-size:10px;color:rgba(255,255,255,0.5);margin-top:3px;font-family:var(--font-mono)}
+.dark .sb-logo p{color:var(--text3)}
+.sb-back{background:rgba(255,255,255,0.15);border:none;color:#fff;cursor:pointer;font-size:12px;padding:5px 9px;border-radius:var(--radius-xs);font-family:var(--font);font-weight:500;white-space:nowrap;transition:all 0.18s ease}
+.dark .sb-back{background:var(--surface-elevated);color:var(--text2);border:1px solid var(--border)}
+.sb-back:hover{background:rgba(255,255,255,0.25)}
+.dark .sb-back:hover{background:var(--surface);color:var(--text)}
+.crm-nav{padding:16px 12px;flex:1;overflow-y:auto}
+.nav-label{font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.1em;font-family:var(--font);font-weight:500;padding:0 12px;margin-bottom:8px}
+.dark .nav-label{color:var(--text3)}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--radius-sm);color:rgba(255,255,255,0.65);font-size:13px;font-weight:400;cursor:pointer;transition:all 0.18s ease;margin-bottom:2px;font-family:var(--font)}
+.dark .nav-item{color:var(--text2)}
+.nav-item:hover{background:rgba(255,255,255,0.1);color:#fff}
+.dark .nav-item:hover{background:var(--surface-elevated);color:var(--text)}
+.nav-item.active{background:rgba(255,255,255,0.15);color:#fff;font-weight:500}
+.dark .nav-item.active{background:color-mix(in srgb,var(--accent) 15%,transparent);color:var(--accent)}
+.nav-icon{font-size:15px;width:20px;text-align:center;flex-shrink:0}
+.sb-bottom{padding:16px 12px 24px;border-top:1px solid rgba(255,255,255,0.1)}
+.dark .sb-bottom{border-top:1px solid var(--border)}
+.sb-user{display:flex;align-items:center;gap:10px;padding:8px 12px}
+.user-avatar{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff;flex-shrink:0}
+.dark .user-avatar{background:var(--surface-elevated);color:var(--text2)}
+.sb-user-name{font-size:12px;color:rgba(255,255,255,0.85);font-weight:500}
+.dark .sb-user-name{color:var(--text)}
+.sb-user-role{font-size:10px;color:rgba(255,255,255,0.45)}
+.dark .sb-user-role{color:var(--text3)}
+
+/* CRM main area */
+.crm-main{flex:1;overflow-x:auto;display:flex;flex-direction:column}
+.crm-topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;box-shadow:var(--shadow)}
+.crm-topbar h2{font-size:15px;font-weight:600;color:var(--text);font-family:var(--font-display);letter-spacing:-0.02em}
+.crm-topbar p{font-size:11px;color:var(--text3);font-family:var(--font-mono);margin-top:1px}
+.crm-topbar-right{display:flex;align-items:center;gap:10px}
+.search-wrap{position:relative}
+.search-wrap input{padding:8px 12px 8px 32px;background:var(--surface-elevated);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:12px;width:220px;font-family:var(--font);outline:none;transition:border-color 0.18s ease}
+.search-wrap input:focus{border-color:var(--accent);background:var(--surface)}
+.search-wrap input::placeholder{color:var(--text3)}
+.search-icon{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:13px;pointer-events:none}
+
+/* CRM Stats */
+.crm-stats{padding:16px 24px 4px;display:grid;grid-template-columns:repeat(5,1fr);gap:10px;flex-shrink:0}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;cursor:pointer;transition:all 0.18s ease;box-shadow:var(--shadow)}
+.stat-card:hover{border-color:var(--accent);transform:translateY(-1px);box-shadow:var(--shadow-md)}
+.stat-card .lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;font-family:var(--font);font-weight:500}
+.stat-card .val{font-size:26px;font-weight:600;margin-top:4px;line-height:1;color:var(--text);font-family:var(--font-mono)}
+.stat-card.overdue .val{color:var(--danger)}
+.stat-card.today .val{color:var(--accent-warm)}
+.stat-card.active .val{color:var(--success)}
+.stat-card.booked .val{color:var(--success)}
+.stat-card.companies .val{color:var(--accent)}
+.stat-card.active-filter{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,transparent)}
+
+/* CRM Controls */
+.crm-controls{padding:12px 24px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;border-bottom:1px solid var(--border);flex-shrink:0}
+.filter-pill{padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:pointer;font-size:11px;font-weight:500;transition:all 0.18s ease;white-space:nowrap;font-family:var(--font)}
+.filter-pill:hover{border-color:var(--accent);color:var(--accent)}
+.filter-pill.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.controls-right{margin-left:auto;display:flex;gap:8px}
+.action-btn{padding:7px 14px;border:none;border-radius:var(--radius-sm);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all 0.18s ease;white-space:nowrap}
+.abtn-green{background:var(--accent);color:#fff}.abtn-green:hover{background:color-mix(in srgb,var(--accent) 85%,black);transform:translateY(-1px)}
+.abtn-outline{background:transparent;border:1px solid var(--border);color:var(--text2)}.abtn-outline:hover{border-color:var(--accent);color:var(--accent)}
+
+/* CRM Table */
+.crm-table-wrap{flex:1;overflow:auto;padding:0 24px 40px}
+.crm-table-wrap table{width:100%;border-collapse:separate;border-spacing:0;font-size:12px;margin-top:12px}
+.crm-table-wrap thead th{padding:8px 10px;text-align:left;color:var(--text3);font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;font-family:var(--font);border-bottom:1px solid var(--border);background:var(--surface-elevated);position:sticky;top:0;z-index:1}
+.crm-table-wrap thead th:first-child{padding-left:14px;border-radius:var(--radius-xs) 0 0 0}
+.co-row{background:var(--surface);cursor:pointer;transition:background 0.1s;border-bottom:1px solid var(--border)}
+.co-row:hover{background:var(--surface-elevated)}
+.co-row td{padding:11px 10px;vertical-align:middle}
+.co-row td:first-child{padding-left:14px}
+.co-name-wrap{display:flex;align-items:center;gap:8px}
+.co-arrow{font-size:9px;color:var(--text3);transition:transform .2s;flex-shrink:0}
+.co-row.open .co-arrow{transform:rotate(90deg)}
+.co-name-text{font-size:13px;font-weight:600;color:var(--text)}
+.co-meta{font-size:11px;color:var(--text3);margin-top:2px;max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.co-badge{padding:2px 9px;border-radius:20px;font-size:10px;font-weight:500;background:var(--surface-elevated);color:var(--text2);border:1px solid var(--border);max-width:180px;display:inline-block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--font-mono)}
+.contact-row{background:var(--bg);border-bottom:1px solid var(--border);display:none;cursor:pointer;transition:background 0.1s}
+.contact-row:hover{background:color-mix(in srgb,var(--accent) 5%,transparent)}
+.contact-row td{padding:9px 10px 9px 38px;vertical-align:middle}
+.contact-row.visible{display:table-row}
+.add-contact-row{background:var(--surface-elevated);border-bottom:2px solid var(--border);display:none}
+.add-contact-row td{padding:7px 10px 7px 38px}
+.add-contact-row.visible{display:table-row}
+.add-ct-inline{padding:4px 12px;background:transparent;border:1px dashed var(--border);border-radius:var(--radius-xs);color:var(--text3);font-size:11px;cursor:pointer;transition:all 0.18s ease;font-family:var(--font)}
+.add-ct-inline:hover{border-color:var(--accent);color:var(--accent);border-style:solid}
+.badge{padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;display:inline-block;white-space:nowrap;font-family:var(--font-mono)}
+.badge-li{background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--accent)}
+.badge-email{background:color-mix(in srgb,var(--success) 12%,transparent);color:var(--success)}
+.badge-call{background:color-mix(in srgb,#8b5cf6 12%,transparent);color:#8b5cf6}
+.sdot{width:6px;height:6px;border-radius:50%;flex-shrink:0;display:inline-block;margin-right:5px}
+.dot-active{background:var(--accent)}.dot-takeaway{background:var(--accent-warm)}.dot-wait{background:var(--border)}.dot-booked{background:var(--success)}.dot-won{background:var(--success)}.dot-lost{background:var(--border)}
+.fu-overdue{color:var(--danger);font-weight:600;font-family:var(--font-mono);font-size:11px}
+.fu-today{color:var(--accent-warm);font-weight:600;font-family:var(--font-mono);font-size:11px}
+.fu-soon{color:var(--success);font-family:var(--font-mono);font-size:11px}
+.fu-later{color:var(--text3);font-family:var(--font-mono);font-size:11px}
+.fu-wait{color:var(--text3);font-style:italic;font-family:var(--font-mono);font-size:11px}
+.step-pill{background:var(--surface-elevated);border:1px solid var(--border);border-radius:var(--radius-xs);padding:2px 8px;font-size:10px;color:var(--text2);white-space:nowrap;max-width:150px;overflow:hidden;text-overflow:ellipsis;display:inline-block;font-family:var(--font-mono)}
+.tbl-btn{padding:3px 10px;background:transparent;border:1px solid var(--border);border-radius:var(--radius-xs);color:var(--text2);font-size:10px;cursor:pointer;transition:all 0.18s ease;margin-right:3px;font-family:var(--font)}
+.tbl-btn:hover{border-color:var(--accent);color:var(--accent)}
+.partner-name{color:#c2410c!important}
+.skip-name{color:var(--accent-warm)!important}
+.gds-sponsor-tag{display:inline-flex;align-items:center;padding:1px 7px;border-radius:20px;font-size:9px;font-weight:600;background:color-mix(in srgb,#c2410c 10%,transparent);color:#c2410c;border:1px solid color-mix(in srgb,#c2410c 25%,transparent);margin-left:6px;font-family:var(--font)}
+.gds-skip-tag{display:inline-flex;align-items:center;padding:1px 7px;border-radius:20px;font-size:9px;font-weight:600;background:color-mix(in srgb,var(--accent-warm) 10%,transparent);color:var(--accent-warm);border:1px solid color-mix(in srgb,var(--accent-warm) 25%,transparent);margin-left:6px;font-family:var(--font)}
+.co-tag-btns{display:inline-flex;flex-direction:column;gap:2px;margin-right:4px;vertical-align:middle}
+.tbl-btn-sponsor{padding:2px 8px;background:transparent;border:1px dashed var(--border);border-radius:var(--radius-xs);color:var(--text3);font-size:9px;cursor:pointer;transition:all 0.18s ease;white-space:nowrap;line-height:1.5;font-family:var(--font)}
+.tbl-btn-sponsor:hover{border-color:#c2410c;color:#c2410c;border-style:solid}
+.tbl-btn-sponsor.is-sponsor{background:color-mix(in srgb,#c2410c 10%,transparent);border:1px solid color-mix(in srgb,#c2410c 25%,transparent);color:#c2410c}
+.tbl-btn-skip{padding:2px 8px;background:transparent;border:1px dashed var(--border);border-radius:var(--radius-xs);color:var(--text3);font-size:9px;cursor:pointer;transition:all 0.18s ease;white-space:nowrap;line-height:1.5;font-family:var(--font)}
+.tbl-btn-skip:hover{border-color:var(--accent-warm);color:var(--accent-warm);border-style:solid}
+.tbl-btn-skip.is-skip{background:color-mix(in srgb,var(--accent-warm) 10%,transparent);border:1px solid color-mix(in srgb,var(--accent-warm) 25%,transparent);color:var(--accent-warm)}
+.li-btn{padding:3px 8px;background:#0a66c2;border:none;border-radius:4px;color:#fff;font-size:10px;font-weight:900;cursor:pointer;font-family:Georgia,serif;letter-spacing:-.5px;line-height:1.4;transition:background 0.18s ease}
+.li-btn:hover{background:#004182}
+.empty-state{text-align:center;padding:60px 20px}
+.empty-state .icon{font-size:40px;margin-bottom:14px}
+.empty-state h3{font-size:16px;font-weight:600;color:var(--text3);margin-bottom:6px;font-family:var(--font-display)}
+.empty-state p{font-size:12px;color:var(--text3)}
+.hidden{display:none!important}
+
+/* CRM Sub-views */
+.crm-subview{display:none;flex:1;overflow-y:auto;padding:16px 24px 40px}
+.crm-subview.visible{display:block}
+
+/* ══════════════════════════════════════════════════════════════════
+   MODALS
+══════════════════════════════════════════════════════════════════ */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(20px);z-index:500;display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;overflow-y:auto}
+.overlay.hidden{display:none}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:18px;width:680px;max-width:100%;padding:24px;position:relative;box-shadow:0 24px 60px rgba(0,0,0,0.2)}
+.dark .modal{box-shadow:0 24px 60px rgba(0,0,0,0.5)}
+.modal-sm{width:520px}
+.modal-header{margin-bottom:18px}
+.modal-header h2{font-size:17px;font-weight:600;color:var(--text);padding-right:32px;font-family:var(--font-display);letter-spacing:-0.02em}
+.modal-header p{font-size:12px;color:var(--text3);margin-top:3px}
+.mclose{position:absolute;top:18px;right:18px;background:var(--surface-elevated);border:1px solid var(--border);color:var(--text2);cursor:pointer;width:28px;height:28px;border-radius:6px;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all 0.18s ease}
+.mclose:hover{background:color-mix(in srgb,var(--danger) 10%,transparent);border-color:var(--danger);color:var(--danger)}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px}
+.fg{display:flex;flex-direction:column;gap:5px}
+.fg.full{grid-column:1/-1}
+.fg label{font-size:10px;color:var(--text3);font-weight:500;text-transform:uppercase;letter-spacing:0.08em;font-family:var(--font)}
+.fg input,.fg select,.fg textarea{background:var(--surface-elevated);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);padding:10px 12px;font-size:13px;font-family:var(--font);transition:border-color 0.18s ease;outline:none}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--accent);background:var(--surface)}
+.fg textarea{resize:vertical;min-height:60px}
+select option{background:var(--surface);color:var(--text)}
+.co-info-box{background:color-mix(in srgb,var(--accent) 6%,transparent);border:1px solid color-mix(in srgb,var(--accent) 20%,transparent);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:16px;font-size:12px}
+.co-info-box .row{display:flex;gap:8px;margin-bottom:5px;align-items:flex-start}
+.co-info-box .row:last-child{margin-bottom:0}
+.co-info-box .lbl{font-size:10px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:0.06em;white-space:nowrap;min-width:80px;padding-top:1px;font-family:var(--font-mono)}
+.co-info-box .val{color:var(--text2);line-height:1.5}
+.cadence-section{border-top:1px solid var(--border);padding-top:16px;margin-top:4px}
+.cadence-section h3{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;font-family:var(--font)}
+.snav{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+.sn{width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text3);cursor:pointer;font-size:11px;font-weight:600;transition:all 0.18s ease;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono)}
+.sn:hover{border-color:var(--accent);color:var(--accent)}
+.sn.current{background:var(--accent);border-color:var(--accent);color:#fff}
+.sn.done{background:color-mix(in srgb,var(--accent) 12%,transparent);border-color:color-mix(in srgb,var(--accent) 30%,transparent);color:var(--accent)}
+.step-lbl{font-size:11px;color:var(--text2);margin-bottom:6px;font-weight:600}
+.timing-tag{display:inline-flex;align-items:center;gap:4px;background:var(--surface-elevated);border:1px solid var(--border);border-radius:var(--radius-xs);padding:3px 10px;font-size:10px;color:var(--text3);margin-bottom:10px;font-family:var(--font-mono)}
+.tbox{background:var(--surface-elevated);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;font-size:12px;line-height:1.7;color:var(--text2);position:relative;white-space:pre-wrap}
+.copy-btn{position:absolute;top:10px;right:10px;padding:3px 10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xs);color:var(--text2);font-size:10px;font-weight:600;cursor:pointer;transition:all 0.18s ease;font-family:var(--font)}
+.copy-btn:hover{background:var(--accent);border-color:var(--accent);color:#fff}
+.ph{background:color-mix(in srgb,var(--accent) 12%,transparent);padding:1px 5px;border-radius:3px;color:var(--accent)}
+.mactions{display:flex;gap:10px;margin-top:18px;padding-top:16px;border-top:1px solid var(--border)}
+.btn-save{flex:1;padding:10px;background:var(--accent);border:none;border-radius:var(--radius-sm);color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all 0.18s ease}
+.btn-save:hover{background:color-mix(in srgb,var(--accent) 85%,black);transform:translateY(-1px)}
+.btn-cancel{padding:10px 16px;background:transparent;border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text2);font-size:13px;cursor:pointer;font-family:var(--font);transition:all 0.18s ease}
+.btn-cancel:hover{border-color:var(--text2);color:var(--text)}
+.btn-del{padding:10px 14px;background:transparent;border:1px solid color-mix(in srgb,var(--danger) 40%,transparent);border-radius:var(--radius-sm);color:var(--danger);font-size:13px;cursor:pointer;font-family:var(--font);transition:all 0.18s ease}
+.btn-del:hover{background:color-mix(in srgb,var(--danger) 10%,transparent)}
+.reengage-wrap{border:1px solid color-mix(in srgb,var(--accent-warm) 30%,transparent);border-radius:var(--radius-sm);padding:10px 12px;background:color-mix(in srgb,var(--accent-warm) 8%,transparent)}
+
+/* ── Tone picker ── */
+.tone-picker{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px;padding:8px 10px;background:var(--surface-elevated);border:1px solid var(--border);border-radius:var(--radius-sm)}
+.tone-picker-lbl{font-size:10px;color:var(--text3);font-family:var(--font);text-transform:uppercase;letter-spacing:0.08em;font-weight:500;margin-right:2px;flex-shrink:0}
+.tone-pill{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;border:1px solid var(--border);background:var(--surface-elevated);color:var(--text3);font-size:10px;font-weight:500;font-family:var(--font);cursor:pointer;transition:all 0.18s ease;white-space:nowrap;letter-spacing:0.02em}
+.tone-pill:hover{border-color:var(--accent);color:var(--accent)}
+.tone-pill.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.dark .tone-pill{background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.15);color:rgba(255,255,255,0.5)}
+.dark .tone-pill:hover{background:rgba(255,255,255,0.14);border-color:rgba(255,255,255,0.3);color:rgba(255,255,255,0.8)}
+.dark .tone-pill.active{background:#F4F1EC;border-color:#F4F1EC;color:#2D3F6B;font-weight:600}
+.tone-row{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:8px}
+.tone-label{font-size:10px;color:var(--text3);font-family:var(--font);text-transform:uppercase;letter-spacing:0.08em;margin-right:2px;font-weight:500}
+
+/* ── Connect banner ── */
+#connect-banner{background:var(--accent);color:rgba(255,255,255,0.75);padding:8px 16px;padding-top:calc(8px + env(safe-area-inset-top));display:flex;align-items:center;justify-content:space-between;flex-shrink:0;font-size:11px;gap:10px;border-bottom:1px solid rgba(255,255,255,0.1)}
+.dark #connect-banner{background:#151820;border-bottom-color:rgba(255,255,255,0.06);padding-top:calc(8px + env(safe-area-inset-top))}
+#connect-banner.synced{background:color-mix(in srgb,var(--accent) 95%,#6fdf9e);border-color:rgba(255,255,255,0.15)}
+#connect-banner-msg{flex:1;opacity:.9}
+#connect-banner-btn{padding:5px 14px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);border-radius:20px;color:#fff;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:var(--font);transition:all 0.18s ease}
+#connect-banner-btn:hover{background:rgba(255,255,255,0.25);border-color:rgba(255,255,255,0.4)}
+.sync-dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:6px;flex-shrink:0}
+.sync-dot.green{background:var(--success)}
+.sync-dot.grey{background:var(--text3)}
+
+/* ── Gmail OAuth UI ── */
+.gmail-connect-box{text-align:center;padding:40px 20px}
+.gmail-connect-box .gc-icon{font-size:38px;margin-bottom:14px}
+.gmail-connect-box h3{font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px;font-family:var(--font-display)}
+.gmail-connect-box p{font-size:12px;color:var(--text3);margin-bottom:18px;line-height:1.5}
+.btn-google{display:inline-flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 20px;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;box-shadow:var(--shadow);transition:all 0.18s ease;font-family:var(--font)}
+.btn-google:hover{box-shadow:var(--shadow-md);border-color:var(--accent);transform:translateY(-1px)}
+.btn-google svg{flex-shrink:0}
+
+/* ── Skeleton loader ── */
+.skel{background:linear-gradient(90deg,var(--border) 25%,var(--surface-elevated) 50%,var(--border) 75%);background-size:200% 100%;animation:skel-shine 1.4s infinite;border-radius:4px}
+@keyframes skel-shine{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.skel-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:8px;box-shadow:var(--shadow)}
+.skel-row{height:12px;margin-bottom:8px}
+.skel-row.wide{width:70%}
+.skel-row.med{width:50%}
+.skel-row.short{width:35%}
+
+/* ── Chat panel ── */
+#panel-chat.active{display:flex;flex-direction:column}
+#chat-messages{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding-bottom:4px;min-height:200px}
+.chat-bubble{max-width:85%;padding:10px 14px;border-radius:16px;font-size:14px;line-height:1.55;word-break:break-word}
+.chat-bubble.user{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:4px}
+.chat-bubble.ai{align-self:flex-start;background:var(--surface-elevated);color:var(--text);border-bottom-left-radius:4px;border:1px solid var(--border)}
+.chat-bubble.ai.thinking{opacity:0.6;font-style:italic}
+#chat-input-row{display:flex;gap:8px;align-items:flex-end;margin-top:10px}
+#chat-input{flex:1;background:var(--surface-elevated);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:14px;padding:10px 14px;resize:none;min-height:42px;max-height:140px;font-family:var(--font);line-height:1.5;outline:none}
+#chat-input:focus{border-color:var(--accent)}
+#chat-send-btn{background:var(--accent);color:#fff;border:none;border-radius:12px;padding:10px 16px;font-size:14px;cursor:pointer;font-weight:600;flex-shrink:0;font-family:var(--font);transition:opacity 0.18s}
+#chat-send-btn:disabled{opacity:0.45;cursor:not-allowed}
+#chat-clear-btn{background:none;border:1px solid var(--border);border-radius:10px;color:var(--text3);font-size:12px;padding:6px 12px;cursor:pointer;font-family:var(--font);margin-left:4px;transition:all 0.18s}
+#chat-clear-btn:hover{color:var(--text);border-color:var(--text3)}
+
+/* ── Reply drafter panel ── */
+#reply-output{width:100%;box-sizing:border-box;min-height:100px;background:var(--surface-elevated);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;padding:12px;resize:vertical;font-family:var(--font);margin-top:10px;line-height:1.6;outline:none}
+#reply-output:focus{border-color:var(--accent)}
+
+/* ── MAS panel ── */
+.mas-drop-zone{border:2px dashed var(--border);border-radius:14px;padding:24px;text-align:center;cursor:pointer;transition:all 0.2s;color:var(--text3);font-size:13px;margin-bottom:12px}
+.mas-drop-zone:hover,.mas-drop-zone.drag-over{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 6%,transparent);color:var(--accent)}
+.mas-drop-zone svg{display:block;margin:0 auto 8px}
+.mas-photo-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.mas-thumb{position:relative;width:72px;height:72px;border-radius:10px;overflow:hidden;border:1px solid var(--border)}
+.mas-thumb img{width:100%;height:100%;object-fit:cover}
+.mas-thumb-rm{position:absolute;top:3px;right:3px;background:rgba(0,0,0,0.65);color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:11px;line-height:18px;text-align:center;cursor:pointer;padding:0}
+.mas-season-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.mas-season-chip{padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:var(--surface-elevated);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.18s;font-family:var(--font)}
+.mas-season-chip.active{background:var(--accent);border-color:var(--accent);color:#fff}
+#mas-result{width:100%;box-sizing:border-box;min-height:160px;background:var(--surface-elevated);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;padding:12px;resize:vertical;font-family:var(--font);margin-top:10px;line-height:1.6;outline:none;white-space:pre-wrap}
+#mas-result:focus{border-color:var(--accent)}
+
+/* ── Toast ── */
+#os-toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface-elevated);color:var(--text);font-size:13px;font-weight:600;padding:10px 20px;border-radius:20px;border:1px solid var(--border);box-shadow:var(--shadow-md);opacity:0;transition:all .3s;pointer-events:none;z-index:99999;white-space:nowrap;font-family:var(--font)}
+#os-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── Sheets sync indicator in CRM topbar ── */
+.sheets-indicator{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-family:var(--font-mono);padding:3px 10px;border-radius:20px;border:1px solid var(--border);background:var(--surface-elevated);color:var(--text3);cursor:pointer;transition:all 0.18s ease}
+.sheets-indicator:hover{border-color:var(--accent);color:var(--accent)}
+.sheets-indicator.synced{background:color-mix(in srgb,var(--success) 10%,transparent);border-color:color-mix(in srgb,var(--success) 25%,transparent);color:var(--success)}
+
+/* ══════════════════════════════════════════════════════════════════
+   RESPONSIVE — same layout everywhere, just expands on desktop
+══════════════════════════════════════════════════════════════════ */
+/* Sidebar + desktop topbar are hidden — layout stays the same on all screen sizes */
+#desktop-sidebar { display: none !important; }
+#desktop-topbar  { display: none !important; }
+
+@media (min-width: 769px) {
+  /* On desktop: expand panels + header to fill width nicely */
+  .header { padding: 20px 32px 18px; }
+  .panel { padding: 24px 32px 60px; }
+  .stat-strip { grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .msg-card-head { padding: 16px 20px; }
+  .tab { font-size: 11px; padding: 12px 8px; }
+  .mini-stat { padding: 14px 18px; }
+  .mini-stat-n { font-size: 24px; }
+}
+</style>
+</head>
+<body>
+<!-- ═══════════════════════════════════════════════════════════════════
+     MOBILE DASHBOARD VIEW
+═══════════════════════════════════════════════════════════════════ -->
+<!-- Toast notification -->
+<div id="os-toast"></div>
+
+<div id="view-mobile" class="app-mobile">
+
+  <!-- Desktop Sidebar (hidden on mobile) -->
+  <nav id="desktop-sidebar" style="display:none; flex-direction:column; padding:24px 16px; gap:4px; border-right:1px solid var(--border); background:var(--surface); overflow-y:auto">
+    <div style="font-family:var(--font-display); font-size:18px; font-weight:600; color:var(--text); letter-spacing:-0.02em; margin-bottom:24px; padding-left:8px; display:flex; align-items:center; gap:10px">
+      <svg width="24" height="24" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+        <rect width="28" height="28" rx="8" fill="var(--accent)"/>
+        <path d="M14 7L20 21H8L14 7Z" stroke="white" stroke-width="1.5" fill="none" stroke-linejoin="round"/>
+        <line x1="10" y1="16" x2="18" y2="16" stroke="white" stroke-width="1.5"/>
+      </svg>
+      Alyssa OS
+    </div>
+    <button class="sidebar-nav-btn active" onclick="showTab('chat',0)" data-tab="chat">
+      Chat
+    </button>
+    <button class="sidebar-nav-btn" onclick="showTab('reply',1)" data-tab="reply">
+      Reply
+    </button>
+    <button class="sidebar-nav-btn" onclick="showTab('linkedin',2)" data-tab="linkedin">
+      LinkedIn
+    </button>
+    <button class="sidebar-nav-btn" onclick="showTab('crm',3)" data-tab="crm">
+      CRM
+    </button>
+    <button class="sidebar-nav-btn" onclick="showTab('mas',4)" data-tab="mas">
+      Mile Away
+    </button>
+    <div style="flex:1"></div>
+    <button class="sidebar-nav-btn" onclick="openFullCRM()">
+      Full CRM
+    </button>
+  </nav>
+
+  <!-- Desktop top bar (hidden on mobile, shown on desktop via media query) -->
+  <div id="desktop-topbar" style="display:none; grid-column:2; align-items:center; justify-content:space-between; padding:18px 28px 14px; border-bottom:1px solid var(--border); background:var(--surface); flex-shrink:0">
+    <div>
+      <div id="desktop-greeting" style="font-family:var(--font-display);font-size:22px;font-weight:600;color:var(--text);letter-spacing:-0.02em">Good morning, Alyssa</div>
+      <div id="desktop-date" style="font-size:11px;color:var(--text3);font-family:var(--font-mono);margin-top:3px"></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px">
+      <div style="display:flex;gap:10px" id="desktop-mini-stats"></div>
+      <button onclick="toggleTheme()" id="theme-toggle" class="theme-switch" title="Toggle dark/light mode" aria-label="Toggle dark mode">
+          <span class="theme-switch-label" id="desktop-theme-label">Light</span>
+          <span class="theme-switch-track"><span class="theme-switch-thumb"></span></span>
+          <span class="theme-switch-label" id="desktop-theme-label2">Dark</span>
+        </button>
+    </div>
+  </div>
+
+
+  <div class="header" id="mobile-header">
+    <div class="header-top">
+      <div class="header-logo">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-label="Alyssa OS" style="flex-shrink:0">
+          <rect width="28" height="28" rx="8" fill="rgba(255,255,255,0.18)"/>
+          <path d="M14 7L20 21H8L14 7Z" stroke="white" stroke-width="1.5" fill="none" stroke-linejoin="round"/>
+          <line x1="10" y1="16" x2="18" y2="16" stroke="white" stroke-width="1.5"/>
+        </svg>
+        <span class="header-logo-wordmark">Alyssa OS</span>
+      </div>
+      <div class="header-right">
+        <div class="header-badge">
+          <div class="header-badge-dot"></div>
+          <span class="header-badge-text">live</span>
+        </div>
+        <button onclick="toggleTheme()" class="theme-switch" title="Toggle dark/light mode" aria-label="Toggle dark mode">
+          <span class="theme-switch-track"><span class="theme-switch-thumb"></span></span>
+        </button>
+      </div>
+    </div>
+    <div class="header-greeting" style="margin-bottom:12px">
+      <h1 id="greeting-text">Good morning, Alyssa</h1>
+      <p id="datestr">Loading...</p>
+    </div>
+    <div class="stat-strip">
+      <div class="mini-stat active-tab" id="ms-chat" >
+        <div class="mini-stat-n">✦</div>
+        <div class="mini-stat-l">chat with me</div>
+      </div>
+      <div class="mini-stat" id="ms-reply" >
+        <div class="mini-stat-n">↩</div>
+        <div class="mini-stat-l">draft reply</div>
+      </div>
+      <div class="mini-stat" id="ms-crm" >
+        <div class="mini-stat-n urgent" id="ms-crm-count">—</div>
+        <div class="mini-stat-l">due/overdue</div>
+      </div>
+      <div class="mini-stat" id="ms-mas" >
+        <div class="mini-stat-n">🏔</div>
+        <div class="mini-stat-l">mile away</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-idx="0" onclick="showTab('chat',0)">Chat</div>
+    <div class="tab" data-idx="1" onclick="showTab('reply',1)">Reply</div>
+    <div class="tab" data-idx="2" onclick="showTab('linkedin',2)">LinkedIn</div>
+    <div class="tab" data-idx="3" onclick="showTab('crm',3)">CRM</div>
+    <div class="tab" data-idx="4" onclick="showTab('mas',4)">MAS</div>
+  </div>
+
+  <div id="panel-container"><div class="panels">
+
+    <!-- CHAT -->
+    <div class="panel active" id="panel-chat">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div class="sec-label" style="margin:0">Chat with Alyssa OS</div>
+        <button id="chat-clear-btn" onclick="clearChat()">Clear</button>
+      </div>
+      <div id="chat-messages"></div>
+      <div id="chat-input-row">
+        <textarea id="chat-input" placeholder="Ask anything — advice, brainstorming, rewrites in your tone..." rows="1" onkeydown="chatKeydown(event)" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
+        <button id="chat-send-btn" onclick="sendChat()">↑</button>
+      </div>
+    </div>
+
+    <!-- REPLY DRAFTER -->
+    <div class="panel" id="panel-reply">
+      <div class="sec-label">Draft a reply</div>
+      <div class="paste-card">
+        <div class="paste-title">Paste what they sent you</div>
+        <div class="paste-sub">Text, email, DM — paste the incoming message and get a reply in your voice</div>
+        <textarea id="reply-incoming" placeholder="Paste their message here..." style="height:88px"></textarea>
+        <input type="text" id="reply-context" class="txt-input" placeholder="One-line context (optional) — e.g. 'work friend, first time texting'" style="margin-top:8px">
+        <div class="tone-row" style="margin-top:8px">
+          <span class="tone-label">Tone</span>
+          <button class="tone-pill active" data-tone="auto" onclick="setTone('auto',this)">Auto</button>
+          <button class="tone-pill" data-tone="me" onclick="setTone('me',this)">Me</button>
+          <button class="tone-pill" data-tone="gds" onclick="setTone('gds',this)">GDS</button>
+          <button class="tone-pill" data-tone="spark" onclick="setTone('spark',this)">Spark</button>
+          <button class="tone-pill" data-tone="polished" onclick="setTone('polished',this)">Polished</button>
+        </div>
+        <div class="btn-row" style="margin-top:10px">
+          <button class="btn btn-blue" onclick="draftReply()">Draft reply</button>
+          <button class="btn" onclick="draftReplyAlts()">Give me 3 options</button>
+        </div>
+        <textarea id="reply-output" placeholder="Your draft will stream here..." readonly></textarea>
+        <div class="btn-row" style="margin-top:8px;display:none" id="reply-copy-row">
+          <button class="btn btn-green" onclick="copyReplyOutput()">Copy</button>
+          <button class="btn" onclick="draftReply()">Re-draft</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LINKEDIN -->
+    <div class="panel" id="panel-linkedin">
+      <div class="sec-label">Draft a reply</div>
+      <div class="paste-card">
+        <div class="paste-title">Paste their message</div>
+        <textarea id="li-msg" placeholder="Paste the LinkedIn message here..." style="height:88px"></textarea>
+        <!-- Context selector — auto-sets tone -->
+        <div style="margin-top:8px">
+          <select class="txt-input" id="li-ctx-type" onchange="liContextChanged()" style="margin-bottom:6px">
+            <option value="">Who is this from?</option>
+            <option value="gds-cold">GDS prospect (cold outreach)</option>
+            <option value="gds-warm">GDS prospect (warm / replied)</option>
+            <option value="personal">Personal / friend</option>
+            <option value="other">Other</option>
+          </select>
+          <input type="text" class="txt-input" id="li-ctx" placeholder="Any extra context (optional)..." style="margin-top:0">
+        </div>
+        <!-- Tone picker -->
+        <div class="tone-row" style="margin-top:8px">
+          <span class="tone-label">Tone</span>
+          <button class="tone-pill active" data-tone="auto" onclick="setTone('auto',this)">Auto</button>
+          <button class="tone-pill" data-tone="gds" onclick="setTone('gds',this)">GDS</button>
+          <button class="tone-pill" data-tone="me" onclick="setTone('me',this)">Me</button>
+          <button class="tone-pill" data-tone="spark" onclick="setTone('spark',this)">Spark</button>
+          <button class="tone-pill" data-tone="polished" onclick="setTone('polished',this)">Polished</button>
+        </div>
+        <div class="btn-row" style="margin-top:10px">
+          <button class="btn btn-blue" onclick="draftLI('reply')">Draft reply</button>
+          <button class="btn btn-green" onclick="draftLI('connect')">Draft connection</button>
+        </div>
+      </div>
+
+      <div class="sec-label" style="margin-top:4px">Quick responses</div>
+      <div class="qr-wrapper">
+        <div class="qr-heading">Saved response templates</div>
+        <select class="qr-select" id="qr-select" onchange="showQR()">
+          <option value="">Select a response...</option>
+        </select>
+        <div class="qr-preview" id="qr-preview"></div>
+        <div class="btn-row" id="qr-btns" style="display:none;margin-top:10px">
+          <button class="btn btn-green" onclick="copyQR()">Copy response</button>
+          <button class="btn btn-blue" onclick="customizeQR()">Customize with AI ↗</button>
+        </div>
+      </div>
+
+      <div class="qr-add">
+        <div class="qr-add-heading">Add a new quick response</div>
+        <textarea id="qr-new-msg" placeholder="Paste your sample response here..." style="height:80px"></textarea>
+        <input type="text" class="txt-input" id="qr-new-title" placeholder="Topic / title (or auto-generate below)" style="margin-top:8px">
+        <div class="btn-row" style="margin-top:10px">
+          <button class="btn btn-blue" onclick="autoTitle()">Auto-generate title ↗</button>
+          <button class="btn btn-blue" onclick="saveQR()">Save response</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CRM PREVIEW -->
+    <div class="panel" id="panel-crm">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div class="sec-label" style="margin:0">Follow-ups due</div>
+        <div class="crm-count-row" style="margin:0">
+          <span class="count-chip chip-red" id="dash-overdue-chip">— overdue</span>
+          <span class="count-chip chip-amber" id="dash-today-chip">— today</span>
+        </div>
+      </div>
+
+      <div class="sec-label" style="color:var(--accent-warm)">Due today</div>
+      <div id="crm-today-list"></div>
+
+      <div class="sec-label" style="color:var(--danger);margin-top:8px">Most overdue</div>
+      <div id="crm-overdue-list"></div>
+
+      <button class="crm-open-btn" onclick="openFullCRM()">Open full GDS Tracker →</button>
+
+      <div style="height:10px"></div>
+      <div class="sec-label">Quick add</div>
+      <div class="paste-card">
+        <div class="paste-title">Log a contact fast</div>
+        <div class="paste-sub">Paste a name + company or LinkedIn URL</div>
+        <textarea id="crm-paste" placeholder="e.g. Jane Smith, CMO at Greenhouse — connected today, sent first message..." style="height:80px"></textarea>
+        <div class="btn-row" style="margin-top:10px">
+          <button class="btn btn-blue" onclick="formatCRM()">Format for CRM ↗</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MILE AWAY STOWE -->
+    <div class="panel" id="panel-mas">
+      <div class="sec-label">Mile Away Stowe — Content Copilot</div>
+
+      <div class="mas-drop-zone" id="mas-drop-zone" onclick="document.getElementById('mas-file-input').click()" ondragover="masHandleDrop(event,'over')" ondragleave="masHandleDrop(event,'leave')" ondrop="masHandleDrop(event,'drop')">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Drop photos here or tap to upload
+        <div style="font-size:11px;margin-top:4px;opacity:0.7">Add up to 6 property photos for better captions</div>
+      </div>
+      <input type="file" id="mas-file-input" accept="image/*" multiple style="display:none" onchange="masHandleFiles(this.files)">
+
+      <div class="mas-photo-grid" id="mas-photo-grid"></div>
+
+      <div class="paste-card">
+        <div class="paste-title">What are you posting about?</div>
+        <div class="paste-sub">Describe the vibe, moment, or feature you want to highlight</div>
+        <textarea id="mas-prompt" placeholder="e.g. hot tub at night with snow falling, cozy fire pit evening, fresh powder ski day..." style="height:72px"></textarea>
+
+        <div style="margin-top:10px">
+          <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;font-family:var(--font-mono)">Season</div>
+          <div class="mas-season-row" id="mas-season-row">
+            <button class="mas-season-chip" data-season="winter" onclick="masSetSeason('winter',this)">❄️ Winter</button>
+            <button class="mas-season-chip" data-season="spring" onclick="masSetSeason('spring',this)">🌿 Spring</button>
+            <button class="mas-season-chip" data-season="summer" onclick="masSetSeason('summer',this)">☀️ Summer</button>
+            <button class="mas-season-chip" data-season="fall" onclick="masSetSeason('fall',this)">🍂 Fall</button>
+          </div>
+        </div>
+
+        <div class="btn-row" style="margin-top:12px">
+          <button class="btn btn-blue" onclick="generateMASContent()">Generate content ↗</button>
+          <button class="btn" onclick="masClearAll()" style="opacity:0.65">Clear</button>
+        </div>
+
+        <textarea id="mas-result" placeholder="Caption, hashtags, song suggestions, and CTA ideas will appear here..." readonly></textarea>
+        <div class="btn-row" style="margin-top:8px;display:none" id="mas-copy-row">
+          <button class="btn btn-green" onclick="copyMASResult()">Copy</button>
+          <button class="btn" onclick="generateMASContent()">Regenerate</button>
+        </div>
+      </div>
+    </div>
+
+  </div></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     FULL CRM VIEW
+═══════════════════════════════════════════════════════════════════ -->
+<div id="view-crm-full">
+  <div class="crm-layout">
+    <aside class="crm-sidebar" id="crm-sidebar">
+      <div class="sidebar-toggle" onclick="toggleCRMSidebar()" id="crmSidebarToggle" title="Collapse">‹</div>
+      <div class="sb-logo">
+        <div>
+          <h1>GDS Tracker</h1>
+          <p>Alyssa James · BDE</p>
+        </div>
+        <button class="sb-back" onclick="backToDashboard()">← Back</button>
+      </div>
+      <nav class="crm-nav">
+        <div class="nav-label">Views</div>
+        <div class="nav-item active" id="nav-tracker" onclick="switchCRMView('tracker',this)"><span class="nav-icon">◎</span><span>All Companies</span></div>
+        <div class="nav-item" id="nav-contacts" onclick="switchCRMView('contacts',this)"><span class="nav-icon">👤</span><span>Contacts</span></div>
+        <div class="nav-item" id="nav-companies" onclick="switchCRMView('companies',this)"><span class="nav-icon">🏢</span><span>Companies</span></div>
+        <div class="nav-label" style="margin-top:16px">Filter</div>
+        <div class="nav-item" onclick="setFilter('overdue',null)"><span class="nav-icon" style="color:var(--danger)">!</span><span>Overdue</span></div>
+        <div class="nav-item" onclick="setFilter('today',null)"><span class="nav-icon" style="color:var(--accent-warm)">◷</span><span>Due Today</span></div>
+        <div class="nav-item" onclick="setFilter('active-only',null)"><span class="nav-icon">→</span><span>Active</span></div>
+        <div class="nav-item" onclick="setFilter('booked',null)"><span class="nav-icon">✓</span><span>Booked</span></div>
+        <div class="nav-label" style="margin-top:16px">Actions</div>
+        <div class="nav-item" onclick="runImport()"><span class="nav-icon">⬇</span><span>Import Contacts</span></div>
+        <div class="nav-item" onclick="exportData()"><span class="nav-icon">↑</span><span>Export Data</span></div>
+        <div class="nav-item" onclick="document.getElementById('importFileInput').click()"><span class="nav-icon">↓</span><span>Import Backup</span></div>
+        <input type="file" id="importFileInput" accept=".json" style="display:none" onchange="importData(event)">
+        <div class="nav-item" onclick="openCoModal()"><span class="nav-icon">+</span><span>Add Company</span></div>
+      </nav>
+      <div class="sb-bottom">
+        <div class="sb-user">
+          <div class="user-avatar">AJ</div>
+          <div><div class="sb-user-name">Alyssa James</div><div class="sb-user-role">BDE · GDS Group</div></div>
+        </div>
+      </div>
+    </aside>
+
+    <div class="crm-main">
+      <div class="crm-topbar">
+        <div>
+          <h2 id="crm-view-title">Prospect Tracker</h2>
+          <p id="crm-date-label"></p>
+        </div>
+        <div class="crm-topbar-right">
+          <div class="search-wrap">
+            <span class="search-icon">⌕</span>
+            <input type="text" id="searchInput" placeholder="Search companies or contacts..." oninput="render()">
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="crm-stats" id="crm-stats-strip">
+        <div class="stat-card companies" onclick="setFilter('all',this)"><div class="lbl">Companies</div><div class="val" id="s-co">0</div></div>
+        <div class="stat-card overdue" onclick="setFilter('overdue',this)"><div class="lbl">Overdue</div><div class="val" id="s-ov">0</div></div>
+        <div class="stat-card today" onclick="setFilter('today',this)"><div class="lbl">Due Today</div><div class="val" id="s-td">0</div></div>
+        <div class="stat-card active" onclick="setFilter('active-only',this)"><div class="lbl">Active Contacts</div><div class="val" id="s-ac">0</div></div>
+        <div class="stat-card booked" onclick="setFilter('booked',this)"><div class="lbl">Meetings Booked</div><div class="val" id="s-bk">0</div></div>
+      </div>
+
+      <!-- Filter bar -->
+      <div class="crm-controls" id="crm-controls-bar">
+        <button class="filter-pill active" onclick="setFilter('all',this)">All</button>
+        <button class="filter-pill" data-filter="overdue">Overdue</button>
+        <button class="filter-pill" data-filter="today">Due Today</button>
+        <button class="filter-pill" data-filter="no-contacts">No Contacts</button>
+        <button class="filter-pill" data-filter="booked">Booked</button>
+        <div class="controls-right">
+          <button class="action-btn abtn-green" onclick="openCoModal()">+ Company</button>
+          <button class="action-btn abtn-outline" onclick="exportData()">Export</button>
+        </div>
+      </div>
+
+      <!-- Main table -->
+      <div class="crm-table-wrap" id="crm-tracker-view">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:230px">Company</th>
+              <th style="width:80px">Contacts</th>
+              <th style="width:160px">Target Titles</th>
+              <th style="width:100px">Next F/U</th>
+              <th>Contact</th>
+              <th>Title</th>
+              <th>Channel</th>
+              <th>Step</th>
+              <th>Last Contact</th>
+              <th>Due</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+        <div class="empty-state hidden" id="emptyState">
+          <div class="icon">🏢</div>
+          <h3>No companies match your filter</h3>
+          <p>Try a different filter or add a company.</p>
+        </div>
+      </div>
+
+      <!-- Contacts sub-view -->
+      <div class="crm-subview" id="crm-contacts-view" style="overflow-y:auto;padding:16px 24px 40px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <div>
+            <h3 style="font-size:15px;font-weight:600">All Contacts</h3>
+            <p style="font-size:11px;color:var(--text3);font-family:var(--font-mono);margin-top:2px" id="contacts-count-label">Loading...</p>
+          </div>
+          <input type="text" id="contacts-search" oninput="renderContactsList()" placeholder="Search contacts..." style="padding:7px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font);font-size:12px;outline:none;width:210px">
+        </div>
+        <table style="width:100%;border-collapse:separate;border-spacing:0;font-size:12px">
+          <thead>
+            <tr>
+              <th style="padding:8px 10px;text-align:left;color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:0.08em;font-family:var(--font-mono);border-bottom:1px solid var(--border);background:var(--surface)">Name</th>
+              <th style="padding:8px 10px;text-align:left;color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:0.08em;font-family:var(--font-mono);border-bottom:1px solid var(--border);background:var(--surface)">Title</th>
+              <th style="padding:8px 10px;text-align:left;color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:0.08em;font-family:var(--font-mono);border-bottom:1px solid var(--border);background:var(--surface)">Company</th>
+              <th style="padding:8px 10px;text-align:left;color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:0.08em;font-family:var(--font-mono);border-bottom:1px solid var(--border);background:var(--surface)">Channel</th>
+              <th style="padding:8px 10px;text-align:left;color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:0.08em;font-family:var(--font-mono);border-bottom:1px solid var(--border);background:var(--surface)">Step</th>
+              <th style="padding:8px 10px;text-align:left;color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:0.08em;font-family:var(--font-mono);border-bottom:1px solid var(--border);background:var(--surface)">Status</th>
+              <th style="padding:8px 10px;text-align:left;color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:0.08em;font-family:var(--font-mono);border-bottom:1px solid var(--border);background:var(--surface)">Due</th>
+              <th style="padding:8px 10px;border-bottom:1px solid var(--border);background:var(--surface)"></th>
+            </tr>
+          </thead>
+          <tbody id="contacts-tbody"></tbody>
+        </table>
+      </div>
+
+      <!-- Companies sub-view -->
+      <div class="crm-subview" id="crm-companies-view" style="overflow-y:auto;padding:16px 24px 40px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <div>
+            <h3 style="font-size:15px;font-weight:600">Companies</h3>
+            <p style="font-size:11px;color:var(--text3);font-family:var(--font-mono);margin-top:2px" id="companies-count-label">Quick reference &amp; notes</p>
+          </div>
+          <input type="text" id="companies-search" oninput="renderCompaniesList()" placeholder="Search companies..." style="padding:7px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font);font-size:12px;outline:none;width:210px">
+        </div>
+        <div id="companies-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Company Modal -->
+<div class="overlay hidden" id="coOverlay">
+  <div class="modal modal-sm">
+    <button class="mclose" onclick="closeCoModal()">✕</button>
+    <div class="modal-header">
+      <h2 id="coModalTitle">Add Company</h2>
+      <p id="coModalSub"></p>
+    </div>
+    <div class="fgrid">
+      <div class="fg full"><label>Company Name</label><input type="text" id="c-name" placeholder="Greenhouse"></div>
+      <div class="fg full"><label>Website</label><input type="url" id="c-website" placeholder="https://greenhouse.io"></div>
+      <div class="fg full"><label>What They Do</label><input type="text" id="c-what" placeholder="ATS and recruiting software for structured hiring"></div>
+      <div class="fg full"><label>Target Titles</label><input type="text" id="c-titles" placeholder="TA Leaders, HR Directors, CHROs"></div>
+      <div class="fg full"><label>Key Competitors</label><input type="text" id="c-comp" placeholder="Lever, Workday, iCIMS, SmartRecruiters"></div>
+      <div class="fg full"><label>Notes</label><textarea id="c-notes" placeholder="Enterprise focus, worked with Comcast..."></textarea></div>
+    </div>
+    <div class="mactions">
+      <button class="btn-save" onclick="saveCo()">Save Company</button>
+      <button class="btn-cancel" onclick="closeCoModal()">Cancel</button>
+      <button class="btn-del hidden" id="coDelBtn" onclick="deleteCo()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Contact Modal -->
+<div class="overlay hidden" id="ctOverlay">
+  <div class="modal">
+    <button class="mclose" onclick="closeCtModal()">✕</button>
+    <div class="modal-header">
+      <h2 id="ctModalTitle">Add Contact</h2>
+      <p id="ctModalSub"></p>
+    </div>
+    <div class="co-info-box" id="coInfoBox"></div>
+    <div class="fgrid">
+      <div class="fg"><label>First Name</label><input type="text" id="ct-fn" placeholder="Sarah"></div>
+      <div class="fg"><label>Last Name</label><input type="text" id="ct-ln" placeholder="Chen"></div>
+      <div class="fg"><label>Title</label>
+        <select id="ct-title">
+          <option>CEO</option><option>CRO</option><option>CMO</option><option>VP Sales</option><option>VP Marketing</option>
+          <option>VP HR</option><option>CHRO</option><option>Head of Talent</option><option>TA Director</option>
+          <option>VP Talent Acquisition</option><option>Other</option>
+        </select>
+      </div>
+      <div class="fg"><label>Primary Channel</label>
+        <select id="ct-channel" onchange="buildStepOptions(this.value,0)">
+          <option value="linkedin">LinkedIn</option>
+          <option value="email">Email</option>
+          <option value="call">Cold Call</option>
+        </select>
+      </div>
+      <div class="fg"><label>Email</label><input type="email" id="ct-email" placeholder="sarah@company.com"></div>
+      <div class="fg"><label>LinkedIn URL</label><input type="text" id="ct-li" placeholder="linkedin.com/in/..."></div>
+      <div class="fg"><label>Phone</label><input type="text" id="ct-phone" placeholder="+1 555 0100"></div>
+      <div class="fg"><label>Current Step</label><select id="ct-step" onchange="updateCadencePanel()"></select></div>
+      <div class="fg"><label>Last Contact Date</label><input type="date" id="ct-date"></div>
+      <div class="fg"><label>Status</label>
+        <select id="ct-status" onchange="toggleReengageField()">
+          <option value="active">Active</option>
+          <option value="takeaway">Takeaway</option>
+          <option value="wait">Long Wait</option>
+          <option value="booked">Booked</option>
+          <option value="won">Won</option>
+          <option value="lost">Lost / Not Interested</option>
+        </select>
+      </div>
+      <div class="fg hidden" id="reengage-wrap" >
+        <label>Re-engage Date</label>
+        <input type="date" id="ct-reengage">
+        <span style="font-size:10px;color:var(--accent-warm);margin-top:3px;display:block">When should this come back on your radar?</span>
+      </div>
+      <div class="fg full"><label>Notes</label><textarea id="ct-notes" placeholder="Objections, what they said, tone to use..."></textarea></div>
+    </div>
+
+    <div class="mactions">
+      <button class="btn-save" onclick="saveCt()">Save Contact</button>
+      <button class="btn-cancel" onclick="closeCtModal()">Cancel</button>
+      <button class="btn-del hidden" id="ctDelBtn" onclick="deleteCt()">Delete</button>
+    </div>
+  </div>
+</div>
+<script>
+// ── Safe storage: localStorage + in-memory fallback (works in sandboxed iframes) ──
+const _memStore = {};
+function safeGet(key, fallback) {
+  try {
+    const v = localStorage.getItem(key);
+    if (v !== null) return v;
+  } catch(e) {}
+  return key in _memStore ? _memStore[key] : fallback;
+}
+function safeSet(key, val) {
+  _memStore[key] = val;
+  try { localStorage.setItem(key, val); } catch(e) {}
+}
+
+
+// ══════════════════════════════════════════════════════════════════
+// THEME TOGGLE
+// ══════════════════════════════════════════════════════════════════
+function initTheme() {
+  const saved = safeGet('theme', '');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const isDark = saved ? saved === 'dark' : prefersDark;
+  document.documentElement.classList.toggle('dark', isDark);
+  _updateThemeLabels(isDark);
+}
+function toggleTheme() {
+  const isDark = document.documentElement.classList.toggle('dark');
+  safeSet('theme', isDark ? 'dark' : 'light');
+  _updateThemeLabels(isDark);
+}
+function _updateThemeLabels(isDark) {
+  const l1 = document.getElementById('desktop-theme-label');
+  const l2 = document.getElementById('desktop-theme-label2');
+  if (l1) l1.style.color = isDark ? 'var(--text3)' : 'var(--text)';
+  if (l2) l2.style.color = isDark ? 'var(--text)' : 'var(--text3)';
+}
+
+// Call initTheme immediately
+initTheme();
+
+
+// ══════════════════════════════════════════════════════════════════
+// GREETING
+// ══════════════════════════════════════════════════════════════════
+const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const now=new Date();
+const hr=now.getHours();
+const greet=hr<12?'Good morning':hr<17?'Good afternoon':'Good evening';
+document.getElementById('greeting-text').textContent=greet+', Alyssa';
+const dg=document.getElementById('desktop-greeting');
+if(dg)dg.textContent=greet+', Alyssa';
+const dd=document.getElementById('desktop-date');
+if(dd)dd.textContent=now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+document.getElementById('datestr').textContent=DAYS[now.getDay()]+', '+MONTHS[now.getMonth()]+' '+now.getDate()+' · NYC';
+
+// ══════════════════════════════════════════════════════════════════
+// VIEW SWITCHING (mobile dashboard ↔ full CRM)
+// ══════════════════════════════════════════════════════════════════
+function openCRMToContact(ctId){
+  openFullCRM();
+  setTimeout(()=>{
+    switchCRMView('contacts',document.getElementById('nav-contacts'));
+    setTimeout(()=>openCtEditModal(ctId),200);
+  },300);
+}
+function openFullCRM(){
+  document.getElementById('view-mobile').style.display='none';
+  document.getElementById('view-crm-full').style.display='block';
+  document.getElementById('view-crm-full').style.height='100vh';
+  render();
+}
+function backToDashboard(){
+  document.getElementById('view-crm-full').style.display='none';
+  // Clear any inline display so the CSS media query (grid on desktop, flex on mobile) takes over
+  document.getElementById('view-mobile').style.display='';
+  updateDashboardCRMStats();
+  // Re-activate the current tab so the panel content renders correctly
+  const activeTab=document.querySelector('.tab.active');
+  const activePanel=document.querySelector('.panel.active');
+  if(!activePanel||!activePanel.id){
+    showTab('chat',0);
+  } else {
+    const id=activePanel.id.replace('panel-','');
+    const idx=activeTab?parseInt(activeTab.dataset.idx)||0:0;
+    showTab(id,idx);
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// MOBILE TAB SWITCHING
+// ══════════════════════════════════════════════════════════════════
+
+function showTab(id,idx){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+
+  document.getElementById('panel-'+id).classList.add('active');
+  const tabEl=document.querySelector(`.tab[data-idx="${idx}"]`);
+  if(tabEl)tabEl.classList.add('active');
+
+  // Update desktop sidebar active state
+  document.querySelectorAll('.sidebar-nav-btn[data-tab]').forEach(b => {
+    b.classList.toggle('active', b.dataset.tab === id);
+  });
+}
+function toggle(id){document.getElementById(id).classList.toggle('open');}
+
+// ══════════════════════════════════════════════════════════════════
+// INLINE AI DRAFT ENGINE
+// ══════════════════════════════════════════════════════════════════
+
+// ── Voice & playbook context baked in ────────────────────────────
+// Live system prompt from Google Drive — fetched from backend, cached 10 min
+let _cachedSystemPrompt = null;
+let _systemPromptFetchedAt = 0;
+async function getSystemPrompt(){
+  const now = Date.now();
+  if(_cachedSystemPrompt && (now - _systemPromptFetchedAt) < 10 * 60 * 1000) return _cachedSystemPrompt;
+  try{
+    const res = await fetch(BACKEND_URL+'/api/system-prompt');
+    const data = await res.json();
+    if(data.systemPrompt){
+      _cachedSystemPrompt = data.systemPrompt;
+      _systemPromptFetchedAt = now;
+      return _cachedSystemPrompt;
+    }
+  }catch(e){ console.log('Could not fetch system prompt, using fallback',e); }
+  return ALYSSA_SYSTEM_FALLBACK;
+}
+
+const ALYSSA_SYSTEM_FALLBACK = `You are Alyssa's personal AI writing assistant. You write in her exact voice — never as a generic AI.
+
+VOICE RULES (hard rules, never break):
+- No em dashes or dashes anywhere
+- No filler openers: never start with "Hope this finds you well," "Just checking in," "I wanted to reach out"
+- Never start a message with "I" as the first word
+- No wishy-washy language: never use "I think," "maybe," "sort of," "just wanted to"
+- No exclamation points in professional messages
+- Never pitch or ask twice in the same message
+- Never sound like you're chasing a response
+- Always capitalize I — never lowercase
+- Keep it short and scannable — no walls of text
+- One strong recommendation or ask, not a list of options
+- Never pad a response to seem thorough
+
+CASUAL / TEXT MODE:
+- Run-on sentences are fine, no periods at end of texts
+- Break long thoughts into short sentences
+- "haha" is a tonal softener used often
+- Letter dragging for softness: "realllll" / "sooo" / "yeahhh" (always 2+ extra letters)
+- Phrases: "ya know" / "I mean" / "that's crazy" / "bc" / "lmk"
+- Direct and breezy, not performative
+
+PROFESSIONAL / GDS OUTREACH MODE:
+- Proper punctuation and capitalization throughout
+- Get to the point by sentence 2, no preamble
+- Peer-level tone — never vendor, never assistant
+- Lead with value, not with yourself
+- Two specific day options when closing ("Tuesday or Wednesday?")
+- Never say: "excited to share" / "I'd love to" / "touching base" / "just wanted to reach out"
+- Never say: event, summit ticket, sponsorship, booth, conference, partnership (say "programme" instead)
+- Name-drop 2 relevant HR tech vendors when appropriate (Phenom, Workday, iCIMS, Gem, Workable, Eightfold AI, Checkr, Fountain, etc.)
+- Reference enterprise buyers when relevant (VP of HR at Comcast, Global Director of TA at Vontier, VP Human Resources at Sysco, etc.)
+
+ABOUT ALYSSA:
+- BDE at GDS Group — net-new cold outreach only to CEOs, CMOs, CROs, VPs at HR tech companies
+- GDS is a global data-driven engagement business connecting HR tech vendors to C-suite buyers at CHRO Insight Summits and MTB Virtual Roundtables
+- Key stat to use: 87% conversion rate, 94% of Fortune 500 engaged, 400K+ video conversations/year
+- MTB Virtual pilot: $39,900 for 2 roundtables, 10 guaranteed qualified executives
+- Target contacts have submitted EPPs with budgets of $100K-$250K+, 3-6 month timelines
+
+OUTPUT FORMAT: Draft only. No preamble, no "Here's a draft:", no explanation after. Just the message, ready to copy and send.`;
+
+// ── Drawer UI ─────────────────────────────────────────────────────
+function ensureDraftDrawer(){
+  if(document.getElementById('draft-drawer'))return;
+  const drawer=document.createElement('div');
+  drawer.id='draft-drawer';
+  drawer.innerHTML=`
+    <div id="dd-overlay" onclick="closeDraftDrawer()"></div>
+    <div id="dd-panel">
+      <div id="dd-header">
+        <span id="dd-label">AI Draft</span>
+        <button onclick="closeDraftDrawer()" id="dd-close">✕</button>
+      </div>
+      <div id="dd-body">
+        <div id="dd-spinner">Drafting<span class="dd-dots">...</span></div>
+        <textarea id="dd-output" placeholder="Your draft will appear here" spellcheck="true"></textarea>
+      </div>
+      <div id="dd-footer">
+        <button class="btn" onclick="copyDraftOutput()">Copy</button>
+        <button class="btn" onclick="redraftCurrent()">Re-draft</button>
+        <button class="btn" id="dd-paste-btn" style="display:none">Paste to reply box</button>
+      </div>
+    </div>`;
+  document.body.appendChild(drawer);
+  // Styles
+  const s=document.createElement('style');
+  s.textContent=`
+    #draft-drawer{position:fixed;inset:0;z-index:9999;pointer-events:none;}
+    #dd-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.55);opacity:0;transition:opacity .25s;pointer-events:none;backdrop-filter:blur(20px);}
+    #dd-panel{position:absolute;bottom:0;left:0;right:0;max-width:520px;margin:0 auto;background:var(--surface);border-radius:20px 20px 0 0;padding:20px;transform:translateY(100%);transition:transform .3s cubic-bezier(.32,0,.15,1);pointer-events:all;max-height:80vh;display:flex;flex-direction:column;gap:12px;border-top:2px solid var(--accent);box-shadow:var(--shadow-md);}
+    #draft-drawer.open #dd-overlay{opacity:1;pointer-events:all;}
+    #draft-drawer.open #dd-panel{transform:translateY(0);}
+    #dd-header{display:flex;justify-content:space-between;align-items:center;}
+    #dd-label{font-weight:600;font-size:15px;color:var(--text);letter-spacing:-0.02em;font-family:'Clash Display',var(--font-display),sans-serif;}
+    #dd-close{background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;padding:4px 8px;border-radius:6px;transition:all 0.18s ease;}
+    #dd-close:hover{color:var(--text);background:var(--surface-elevated);}
+    #dd-body{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;overflow:hidden;}
+    #dd-spinner{color:var(--accent);font-size:13px;font-weight:600;display:none;padding:8px 0;font-family:'Satoshi',var(--font),sans-serif;}
+    .dd-dots{display:inline-block;animation:dd-blink 1.2s infinite;}
+    @keyframes dd-blink{0%,100%{opacity:1}50%{opacity:.2}}
+    #dd-output{flex:1;min-height:120px;max-height:340px;background:var(--bg);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;line-height:1.6;padding:14px;resize:none;font-family:'Satoshi',var(--font),sans-serif;outline:none;}
+    #dd-output:focus{border-color:var(--accent);}
+    #dd-footer{display:flex;gap:8px;flex-wrap:wrap;}
+    #dd-footer .btn{flex:1;min-width:80px;font-size:13px;padding:9px 14px;}
+  `;
+  document.head.appendChild(s);
+}
+
+let _currentPrompt='';
+let _currentTargetTA=null;
+
+function openDraftDrawer(label, prompt, targetTAId, onComplete){
+  ensureDraftDrawer();
+  _currentPrompt=prompt;
+  _currentTargetTA=targetTAId||null;
+  window._draftOnComplete=onComplete||null;
+  document.getElementById('dd-label').textContent=label||'AI Draft';
+  // Reset state
+  const out=document.getElementById('dd-output');
+  out.value='';
+  out.style.display='';
+  out.placeholder='Your draft will appear here';
+  const setup=document.getElementById('dd-setup');
+  if(setup)setup.style.display='none';
+  document.getElementById('dd-footer').style.display='flex';
+  const fb=document.getElementById('dd-fallback-btn');
+  if(fb)fb.style.display='none';
+  document.getElementById('dd-spinner').style.display='block';
+  const pasteBtn=document.getElementById('dd-paste-btn');
+  if(targetTAId){pasteBtn.style.display='';pasteBtn.onclick=()=>pasteDraftToTA(targetTAId);}
+  else pasteBtn.style.display='none';
+  document.getElementById('draft-drawer').classList.add('open');
+  generateDraft(prompt);
+}
+
+function closeDraftDrawer(){
+  const d=document.getElementById('draft-drawer');
+  if(d)d.classList.remove('open');
+}
+
+function pasteDraftToTA(taId){
+  const val=document.getElementById('dd-output').value.trim();
+  if(!val)return;
+  const ta=document.getElementById(taId);
+  if(ta){ta.value=val;ta.focus();}
+  closeDraftDrawer();
+}
+
+function copyDraftOutput(){
+  const val=document.getElementById('dd-output').value.trim();
+  if(!val)return;
+  navigator.clipboard.writeText(val).then(()=>{
+    const b=event.target;const o=b.textContent;b.textContent='Copied!';setTimeout(()=>b.textContent=o,1800);
+  });
+}
+
+function redraftCurrent(){
+  document.getElementById('dd-output').value='';
+  document.getElementById('dd-spinner').style.display='block';
+  generateDraft(_currentPrompt);
+}
+
+async function generateDraft(userPrompt){
+  const out=document.getElementById('dd-output');
+  const spinner=document.getElementById('dd-spinner');
+  out.value='';
+
+  // Check for API key
+  const apiKey=safeGet('or_api_key','');
+  if(!apiKey){
+    spinner.style.display='none';
+    showApiKeySetup(userPrompt);
+    return;
+  }
+
+  try{
+    const systemPrompt = await getSystemPrompt();
+    const res=await fetch('https://openrouter.ai/api/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey,'HTTP-Referer':'https://alyssa-james-os.netlify.app','X-Title':'Alyssa OS'},
+      body:JSON.stringify({
+        model:'anthropic/claude-sonnet-4-5',
+        stream:true,
+        messages:[
+          {role:'system',content:systemPrompt},
+          {role:'user',content:userPrompt}
+        ]
+      })
+    });
+    if(!res.ok){
+      // Key might be wrong
+      if(res.status===401||res.status===403){
+        safeSet('or_api_key','');
+        spinner.style.display='none';
+        showApiKeySetup(userPrompt);
+        return;
+      }
+      throw new Error('API error '+res.status);
+    }
+    spinner.style.display='none';
+    const reader=res.body.getReader();
+    const decoder=new TextDecoder();
+    let buf='';
+    while(true){
+      const {done,value}=await reader.read();
+      if(done)break;
+      buf+=decoder.decode(value,{stream:true});
+      const lines=buf.split('\n');
+      buf=lines.pop();
+      for(const line of lines){
+        if(!line.startsWith('data:'))continue;
+        const d=line.slice(5).trim();
+        if(d==='[DONE]')break;
+        try{
+          const j=JSON.parse(d);
+          const t=j.choices?.[0]?.delta?.content||'';
+          if(t){out.value+=t;out.scrollTop=out.scrollHeight;}
+        }catch(e){}
+      }
+    }
+    if(!out.value.trim())throw new Error('empty response');
+    if(typeof window._draftOnComplete==='function')window._draftOnComplete(out.value);
+  }catch(err){
+    spinner.style.display='none';
+    out.value='';
+    showDraftError(userPrompt);
+  }
+}
+
+function showApiKeySetup(pendingPrompt){
+  const out=document.getElementById('dd-output');
+  const footer=document.getElementById('dd-footer');
+  out.value='';
+  out.placeholder='';
+  out.style.display='none';
+
+  // Build setup UI inside the drawer
+  let setup=document.getElementById('dd-setup');
+  if(!setup){
+    setup=document.createElement('div');
+    setup.id='dd-setup';
+    document.getElementById('dd-body').appendChild(setup);
+  }
+  setup.style.display='block';
+  setup.innerHTML=`
+    <div style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:12px">
+      To generate drafts on your dashboard, add a free OpenRouter API key.<br>
+      It takes 30 seconds. Free. No credit card.
+    </div>
+    <div style="margin-bottom:10px">
+      <a href="https://openrouter.ai/keys" target="_blank" style="color:var(--accent);font-size:13px;font-weight:600">1. Get your free key at openrouter.ai/keys ↗</a>
+    </div>
+    <input id="dd-key-input" type="password" placeholder="Paste your sk-or-v1-... key here"
+      style="width:100%;box-sizing:border-box;background:var(--surface-elevated);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;padding:10px 12px;outline:none;font-family:inherit;margin-bottom:10px">
+    <button class="btn btn-blue" onclick="saveApiKey()" style="width:100%;font-size:13px;padding:10px">
+      Save key and generate draft
+    </button>`;
+
+  // Store pending prompt so we can run it after key save
+  window._pendingDraftPrompt=pendingPrompt;
+  footer.style.display='none';
+}
+
+function saveApiKey(){
+  const key=document.getElementById('dd-key-input').value.trim();
+  if(!key||!key.startsWith('sk-or-')){
+    alert('Paste your full key starting with sk-or-...');
+    return;
+  }
+  safeSet('or_api_key',key);
+  // Hide setup, restore UI
+  const setup=document.getElementById('dd-setup');
+  if(setup)setup.style.display='none';
+  const out=document.getElementById('dd-output');
+  out.style.display='';
+  out.placeholder='Your draft will appear here';
+  document.getElementById('dd-footer').style.display='flex';
+  document.getElementById('dd-spinner').style.display='block';
+  generateDraft(window._pendingDraftPrompt||_currentPrompt);
+}
+
+function showDraftError(userPrompt){
+  const out=document.getElementById('dd-output');
+  out.value='Draft failed. Check your connection and try again.';
+  const footer=document.getElementById('dd-footer');
+  let fb=document.getElementById('dd-fallback-btn');
+  if(!fb){
+    fb=document.createElement('button');
+    fb.id='dd-fallback-btn';
+    fb.className='btn btn-blue';
+    fb.style.cssText='width:100%;font-size:13px;padding:9px 14px;margin-top:6px;';
+    footer.after(fb);
+  }
+  fb.style.display='block';
+  fb.textContent='Open in Perplexity AI instead';
+  fb.onclick=()=>window.open('https://www.perplexity.ai/?q='+encodeURIComponent(userPrompt),'_blank');
+}
+
+// ── Draft function wrappers ────────────────────────────────────────
+function copyTA(id){
+  const ta=document.getElementById(id);
+  if(!ta||!ta.value.trim()){alert('Write or draft a reply first.');return;}
+  navigator.clipboard.writeText(ta.value).then(()=>{
+    const b=event.target;const o=b.textContent;b.textContent='Copied!';setTimeout(()=>b.textContent=o,1500);
+  });
+}
+function draftEmail(from,subj,ctx){
+  const taMap={'Tom Towe':'et1','Michelle James':'et2'};
+  const taId=taMap[from]||(from.includes('Joveo')?'et3':from.includes('Spott')?'et4':null);
+  openDraftDrawer('Draft email reply',
+    'Draft a short email reply to '+from+' re: "'+subj+'". Context: '+ctx+'. Keep it direct, no filler, no em dashes, match my personal voice. '+toneInstruction(),
+    taId);
+}
+function draftGDS(from,subj){
+  const taId=from.includes('Joveo')?'et3':from.includes('Spott')?'et4':null;
+  openDraftDrawer('Draft GDS reply',
+    'Draft a GDS work email reply to '+from+' about "'+subj+'". Use GDS outreach mode — peer level, direct, one ask, name-drop 2 relevant HR tech vendors, include 2 specific day options for scheduling. '+toneInstruction(),
+    taId);
+}
+function draftOutlook(mode){
+  const c=document.getElementById('outlook-paste').value.trim();
+  if(!c){alert('Paste an email first.');return;}
+  if(mode==='gds')
+    openDraftDrawer('Draft GDS reply',
+      'Here is a GDS work email I received:\n\n'+c+'\n\nDraft a reply in GDS outreach mode — peer level, direct, one ask, name-drop 2 HR tech vendors if appropriate. '+toneInstruction(),
+      null);
+  else
+    openDraftDrawer('Draft personal reply',
+      'Here is an email I need to reply to:\n\n'+c+'\n\nDraft a reply in my personal voice — direct, warm where appropriate, no filler, no em dashes. '+toneInstruction(),
+      null);
+}
+function draftText(num,msg,ctx){
+  openDraftDrawer('Draft text reply',
+    'Draft a text message reply to: "'+msg+'". Context: '+ctx+'. Use casual text mode — short, direct, match energy, no periods at end, run-on sentences are fine. '+toneInstruction(),
+    null);
+}
+function liContextChanged(){
+  const v=document.getElementById('li-ctx-type').value;
+  const toneMap={'gds-cold':'gds','gds-warm':'gds','personal':'me','dating':'spark','other':'auto'};
+  const tone=toneMap[v]||'auto';
+  setTone(tone,document.querySelector(`.tone-pill[data-tone="${tone}"]`));
+}
+function draftLI(type){
+  const msg=document.getElementById('li-msg').value.trim();
+  const ctx=document.getElementById('li-ctx').value.trim();
+  const ctxType=document.getElementById('li-ctx-type').value;
+  if(!msg){alert('Paste a LinkedIn message first.');return;}
+  const ctxNote=ctxType?' Context: '+ctxType.replace('-',' ')+'.':'';
+  if(type==='reply')
+    openDraftDrawer('Draft LinkedIn reply',
+      'Draft a LinkedIn reply to: "'+msg+'"'+(ctx?'. '+ctx:'')+ctxNote+' '+toneInstruction(),
+      null);
+  else
+    openDraftDrawer('Draft connection message',
+      'Draft a LinkedIn connection request message for: "'+msg+'"'+(ctx?'. '+ctx:'')+ctxNote+' '+toneInstruction(),
+      null);
+}
+function formatCRM(){
+  const c=document.getElementById('crm-paste').value.trim();
+  if(!c){alert('Add some info first.');return;}
+  openDraftDrawer('Format CRM entry',
+    'Format this contact info for my GDS CRM. Extract: first name, last name, title, company, outreach channel (linkedin/email/call), and any notes. Present it cleanly, one field per line, ready to copy. Info: "'+c+'"',
+    null);
+}
+function draftNewText(){
+  const msg=document.getElementById('sms-paste-in').value.trim();
+  if(!msg){alert('Paste a message first.');return;}
+  const phone=document.getElementById('sms-phone').value.trim().replace(/\D/g,'');
+  openDraftDrawer('Draft text reply',
+    'Draft a text message reply to: "'+msg+'". '+toneInstruction(),
+    null,
+    phone?function(draft){
+      const footer=document.getElementById('dd-footer');
+      let imBtn=document.getElementById('dd-imessage-btn');
+      if(!imBtn){
+        imBtn=document.createElement('button');
+        imBtn.id='dd-imessage-btn';
+        imBtn.className='btn';
+        imBtn.style.cssText='width:100%;font-size:12px;margin-top:4px;background:var(--success);color:#fff;border-color:var(--success)';
+        footer.after(imBtn);
+      }
+      imBtn.style.display='block';
+      imBtn.textContent='↗ Open in iMessage';
+      imBtn.title='Works on Mac + iPhone';
+      imBtn.onclick=function(){
+        const finalDraft=document.getElementById('dd-output').value.trim();
+        window.location.href='sms:+1'+phone+'&body='+encodeURIComponent(finalDraft);
+      };
+    }:null
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════
+// QUICK RESPONSES
+// ══════════════════════════════════════════════════════════════════
+const DEFAULT_QR=[
+  {title:'Explain business model',msg:'Hi [Name], great question — for context, we work with learning and enablement leaders and CHROs who have active budgeted projects around onboarding and coaching their staff. Every year we have hour-long Zoom conversations to understand their priorities, challenges, and budgets in real time.\n\nWe are able to get you into 1-1 conversations with these executives. The way we do this is through summits and curated roundtables, which will depend on who you\'re trying to target and where our clients\' priorities are.\n\nOn the call I can show you projects and the clients we\'re currently working with right now to confirm alignment. Do you have time today or tomorrow for a quick chat?'},
+  {title:'Follow-up — no response',msg:'[Name], I haven\'t heard back so I wanted to check to see if there was still any interest.'}
+];
+let qrList=JSON.parse(safeGet('qr_responses')||'null')||DEFAULT_QR;
+
+function buildQR(){
+  const sel=document.getElementById('qr-select');
+  while(sel.options.length>1)sel.remove(1);
+  qrList.forEach((r,i)=>{const o=document.createElement('option');o.value=i;o.textContent=r.title;sel.appendChild(o);});
+}
+function showQR(){
+  const sel=document.getElementById('qr-select');
+  const preview=document.getElementById('qr-preview');
+  const btns=document.getElementById('qr-btns');
+  const idx=parseInt(sel.value);
+  if(isNaN(idx)||sel.value===''){preview.classList.remove('show');btns.style.display='none';return;}
+  preview.textContent=qrList[idx].msg;
+  preview.classList.add('show');
+  btns.style.display='flex';
+}
+function copyQR(){
+  const idx=parseInt(document.getElementById('qr-select').value);
+  if(isNaN(idx))return;
+  navigator.clipboard.writeText(qrList[idx].msg).then(()=>{
+    const b=event.target;const o=b.textContent;b.textContent='Copied!';setTimeout(()=>b.textContent=o,1500);
+  });
+}
+function customizeQR(){
+  const idx=parseInt(document.getElementById('qr-select').value);
+  if(isNaN(idx))return;
+  const li=document.getElementById('li-msg').value.trim();
+  openDraftDrawer('Customize quick response',
+    'Customize this GDS response for the specific conversation'+(li?' where they said: "'+li+'"':'')+'. Keep GDS voice and structure, just personalize it:\n\n'+qrList[idx].msg+' '+toneInstruction(),
+    null);
+}
+function autoTitle(){
+  const msg=document.getElementById('qr-new-msg').value.trim();
+  if(!msg){alert('Paste a message first.');return;}
+  openDraftDrawer('Generate title',
+    'Give me a 2-4 word topic label for this LinkedIn/sales response. Reply with ONLY the label, nothing else: "'+msg.slice(0,300)+'"',
+    null);
+}
+function saveQR(){
+  const msg=document.getElementById('qr-new-msg').value.trim();
+  const title=document.getElementById('qr-new-title').value.trim()||'Untitled';
+  if(!msg){alert('Paste a message first.');return;}
+  qrList.push({title,msg});
+  safeSet('qr_responses',JSON.stringify(qrList));
+  buildQR();
+  document.getElementById('qr-new-msg').value='';
+  document.getElementById('qr-new-title').value='';
+  const b=event.target;const o=b.textContent;b.textContent='Saved!';setTimeout(()=>b.textContent=o,1500);
+}
+buildQR();
+
+// ══════════════════════════════════════════════════════════════════
+// CRM DATA
+// ══════════════════════════════════════════════════════════════════
+// safeGet/safeSet defined at top of script
+
+let companies=JSON.parse(safeGet('gds3_companies')||'[]');
+let contacts=JSON.parse(safeGet('gds3_contacts')||'[]');
+// Sort alphabetically on load
+companies.sort((a,b)=>a.name.localeCompare(b.name));
+contacts.sort((a,b)=>{
+  const an=`${a.firstName||''} ${a.lastName||''}`.trim().toLowerCase();
+  const bn=`${b.firstName||''} ${b.lastName||''}`.trim().toLowerCase();
+  return an.localeCompare(bn);
+});
+let currentFilter='all';
+let editingCoId=null,editingCtId=null,addingToCoId=null;
+let expandedCos=new Set(JSON.parse(safeGet('gds3_expanded')||'[]'));
+let currentCRMView='tracker';
+
+function saveData(){
+  // Always keep sorted alphabetically
+  companies.sort((a,b)=>a.name.localeCompare(b.name));
+  contacts.sort((a,b)=>{
+    const an=`${a.firstName||''} ${a.lastName||''}`.trim().toLowerCase();
+    const bn=`${b.firstName||''} ${b.lastName||''}`.trim().toLowerCase();
+    return an.localeCompare(bn);
+  });
+  safeSet('gds3_companies',JSON.stringify(companies));
+  safeSet('gds3_contacts',JSON.stringify(contacts));
+  safeSet('gds3_expanded',JSON.stringify([...expandedCos]));
+}
+
+// ── Cadence ──────────────────────────────────────────────────────
+const CADENCE={
+  linkedin:[
+    {label:"Connection Request",daysAfter:0,noAutoDate:true,timing:"Send blank connection request — NO note. Wait for acceptance.",
+     text:`[SEND BLANK CONNECTION REQUEST — NO NOTE]\n\nWait for them to accept before doing anything else.\nOnce they accept → change step to "1 - Message Sent".`},
+    {label:"1 - Message Sent",daysAfter:0,timing:"Send immediately after they accept your connection",
+     text:`Hi [name], I'm currently supporting the VP of HR at Comcast and the Global Director of Talent Acquisition at Vontier as they explore new solutions to modernize their Recruitment Automation stack.\n\nI'm looking at [company] work with [one of their clients], and it seems like a strong fit for the specific initiatives our enterprise clients are currently prioritizing. We already partner with Workday and Phenom, and I'd like to see if it makes sense to include [company].\n\nDo you have 15 minutes tomorrow or Wednesday to walk through their specific challenges and see if there is alignment?`},
+    {label:"2 - Tap",daysAfter:2,timing:"2 days after message sent",
+     text:`Hi [name], just following up. Do you have 15 minutes this week? Happy to walk you through some of the executives we're supporting and share a few of their key initiatives.`},
+    {label:"3 - Follow Up w/ Sponsor Value",daysAfter:3,timing:"3 days after tap (Day 5 total)",
+     text:`[Name], for additional context, the group of execs I'm currently managing are tackling candidate attraction and modernization projects specifically for the June transformation cycles.\n\nWe're already supporting partners like Checkr and Eightfold AI to help them navigate these initiatives and connect with the right decision-makers.\n\nStill worth a brief sync to see if [Company] should be in the mix?`},
+    {label:"4 - Tap/Wrap",daysAfter:4,timing:"4 days after sponsor value (Day 9 total — final)",
+     text:`[Name], appreciate times have been busy. I'm going to be finalizing our partner lineup for the June cycle soon, and wanted to reach out once more as the alignment here is strong.\n\nIf enterprise pipeline isn't a priority right now, no worries at all. If it is, would it make sense to have a quick 15-minute conversation to see if there is alignment?`},
+  ],
+  email:[
+    {label:"1 - Initial",daysAfter:0,timing:"Day 1 — first outreach",
+     text:`Subject: Catch Up Call\n\nHi [Name],\n\nI'm working on a number of Recruitment Automation projects submitted by my enterprise clients that I think [company] could be a good fit for.\n\nCurrently supporting vendors like Phenom, Eightfold AI, Workable, & iCIMS would like to explore the alignment for [company] as well.\n\nHave you got time for a short call tomorrow?`},
+    {label:"2 - Follow Up",daysAfter:3,timing:"3 days after initial email",
+     text:`Subject: [Company] + enterprise pipeline\n\nHi [Name],\n\nJust following up. Given [Company]'s [insert recent development/hook], I imagine enterprise conversations look pretty different now.\n\nI'm happy to share how we've helped other recruitment tech companies land those accounts faster by connecting them directly to the decision-makers we're already supporting for their June transformation cycles.\n\nStill worth a quick call?`},
+    {label:"3 - Last Chance",daysAfter:4,timing:"4 days after follow up — final",
+     text:`Subject: GDS x [company]\n\nHi [Name] — last note from me.\n\nIf the timing isn't right, no worries at all. If enterprise pipeline ever becomes a priority, I'd love to reconnect.\n\nYou can grab time here anytime: [calendar link].`},
+  ],
+  call:[
+    {label:"Cold Call",daysAfter:0,timing:"Morning block 9–10 AM recommended",
+     text:`INTRO:\n"Hi [Name], it's Alyssa from GDS, how are you doing?"\n\nVALUE:\n"I'm currently supporting enterprise brands like Comcast and Vontier on modernizing their recruitment automation stack. Curious, have you worked with them before?"\n\nASK:\n"I have to jump into another meeting in a few minutes anyway, so I wanted to see if we can get 15-minutes on the calendar to walk through the brands we're supporting. What does tomorrow look like for you?"`},
+  ],
+};
+
+// ── Date utils ──────────────────────────────────────────────────
+function today(){const d=new Date();d.setHours(0,0,0,0);return d}
+function addDays(ds,n){const d=new Date(ds);d.setDate(d.getDate()+n);return d}
+function fmtDate(d){if(!d)return'—';return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric'})}
+
+function getNextFUDate(ct){
+  if(!ct.lastContact)return null;
+  if(['won','lost','booked'].includes(ct.status))return null;
+  if(ct.status==='wait'){
+    if(ct.reengageDate)return new Date(ct.reengageDate);
+    return ct.lastContact?addDays(ct.lastContact,90):null;
+  }
+  const steps=CADENCE[ct.channel]||CADENCE.linkedin;
+  const currentStep=steps[parseInt(ct.step)||0];
+  if(currentStep&&currentStep.noAutoDate)return null;
+  const next=steps[(parseInt(ct.step)||0)+1];
+  if(!next)return null;
+  const days=(next.daysAfter!=null)?next.daysAfter:2;
+  return addDays(ct.lastContact,days);
+}
+function fuDisplay(ct){
+  if(['won','lost'].includes(ct.status))return{label:'—',cls:'fu-later'};
+  if(ct.status==='booked')return{label:'Booked ✓',cls:'fu-soon'};
+  if(ct.status==='wait'){const d=getNextFUDate(ct);return{label:d?`Re-engage ${fmtDate(d)}`:'Long wait',cls:'fu-wait'};}
+  const d=getNextFUDate(ct);
+  const steps=CADENCE[ct.channel]||CADENCE.linkedin;
+  if(!d||(parseInt(ct.step)||0)>=steps.length-1)return{label:'Sequence done',cls:'fu-wait'};
+  const t=today(),dd=new Date(d);dd.setHours(0,0,0,0);
+  const diff=Math.round((dd-t)/86400000);
+  if(diff<0)return{label:`${Math.abs(diff)}d overdue`,cls:'fu-overdue'};
+  if(diff===0)return{label:'Due today',cls:'fu-today'};
+  if(diff<=3)return{label:`In ${diff}d · ${fmtDate(d)}`,cls:'fu-soon'};
+  return{label:fmtDate(d),cls:'fu-later'};
+}
+function isOverdue(ct){
+  if(['won','lost','booked','wait'].includes(ct.status))return false;
+  const d=getNextFUDate(ct);if(!d)return false;
+  const dd=new Date(d);dd.setHours(0,0,0,0);return dd<today();
+}
+function isDueToday(ct){
+  if(['won','lost','booked','wait'].includes(ct.status))return false;
+  const d=getNextFUDate(ct);if(!d)return false;
+  const dd=new Date(d);dd.setHours(0,0,0,0);return dd.getTime()===today().getTime();
+}
+function coNextFU(coId){
+  const cts=contacts.filter(c=>c.companyId===coId&&!['won','lost'].includes(c.status));
+  for(const c of cts)if(isOverdue(c))return{label:'Overdue',cls:'fu-overdue'};
+  for(const c of cts)if(isDueToday(c))return{label:'Due today',cls:'fu-today'};
+  let earliest=null;
+  for(const c of cts){const d=getNextFUDate(c);if(d&&(!earliest||d<earliest))earliest=d;}
+  if(!earliest)return{label:'—',cls:'fu-later'};
+  const diff=Math.round((new Date(earliest)-today())/86400000);
+  if(diff<=3)return{label:`In ${diff}d`,cls:'fu-soon'};
+  return{label:fmtDate(earliest),cls:'fu-later'};
+}
+
+// ── GDS Partners ─────────────────────────────────────────────────
+const GDS_PARTNERS=new Set(['seramount','mitratech','guild education','guild','aon','hbd international','phenom','eightfold','eightfold ai','kinetix','abilitie','hireright','moveworks','checkr','fountain','amazing workplace','ampera','classet','servicenow','service now','learnupon','learn upon','adp','ukg','workday','workable','3cconsulting','3c consulting','gloat','first advantage','talogy','terryberry','intellipro','shl','absencesoft','absence soft','jdxpert','peterson tech partners','leoforce','hireez','hireze','sap','oracle','aon assessment']);
+function isGDSPartner(name){return GDS_PARTNERS.has((name||'').toLowerCase().trim());}
+
+function togglePartner(coId,e){
+  if(e)e.stopPropagation();
+  const co=companies.find(c=>c.id===coId);if(!co)return;
+  co.isPartner=!co.isPartner;
+  if(co.isPartner)co.isSkipped=false;
+  saveData();render();
+}
+function toggleSkip(coId,e){
+  if(e)e.stopPropagation();
+  const co=companies.find(c=>c.id===coId);if(!co)return;
+  co.isSkipped=!co.isSkipped;
+  if(co.isSkipped)co.isPartner=false;
+  saveData();render();
+}
+
+const CHBADGE={linkedin:'badge-li',email:'badge-email',call:'badge-call'};
+const CHLABEL={linkedin:'LinkedIn',email:'Email',call:'Cold Call'};
+const DOTCLS={active:'dot-active',takeaway:'dot-takeaway',wait:'dot-wait',booked:'dot-booked',won:'dot-won',lost:'dot-lost'};
+const STLABEL={active:'Active',takeaway:'Takeaway',wait:'Long Wait',booked:'Booked',won:'Won',lost:'Lost'};
+
+// ── Update dashboard CRM stats ───────────────────────────────────
+function updateDashboardCRMStats(){
+  const overdueCount=contacts.filter(isOverdue).length;
+  const todayCount=contacts.filter(isDueToday).length;
+  const total=overdueCount+todayCount;
+  document.getElementById('ms-crm-count').textContent=total||'—';
+
+  document.getElementById('dash-overdue-chip').textContent=overdueCount+' overdue';
+  document.getElementById('dash-today-chip').textContent=todayCount+' today';
+  // Build mobile CRM preview cards
+  buildMobileCRMCards();
+}
+
+function initials(n){const p=n.split(' ');return(p[0][0]+(p[1]?p[1][0]:'')).toUpperCase();}
+
+function buildMobileCRMCards(){
+  const overdueContacts=contacts.filter(isOverdue).sort((a,b)=>{
+    const da=getNextFUDate(a);const db=getNextFUDate(b);
+    if(!da&&!db)return 0;if(!da)return 1;if(!db)return-1;
+    return new Date(da)-new Date(db);
+  });
+  const todayContacts=contacts.filter(isDueToday);
+
+  function makeCard(ct,type){
+    const co=companies.find(c=>c.id===ct.companyId);
+    const fuD=fuDisplay(ct);
+    const steps=CADENCE[ct.channel]||CADENCE.linkedin;
+    const stepLbl=steps[parseInt(ct.step)||0]?.label||'—';
+    const li=ct.linkedin?`<a href="${ct.linkedin}" target="_blank" class="li-btn-small">in</a>`:'';
+    const dueClass=type==='today'?'amber':'red';
+    const cardClass=type==='today'?'due-today':'overdue';
+    return `<div class="crm-contact-card ${cardClass}">
+      <div class="crm-inner">
+        <div class="crm-av">${initials(ct.firstName+' '+(ct.lastName||''))}</div>
+        <div class="crm-info">
+          <div class="crm-name">${ct.firstName} ${ct.lastName||''}</div>
+          <div class="crm-co">${ct.title||''} · ${co?.name||''}</div>
+        </div>
+        <div class="crm-right">
+          <span class="crm-due ${dueClass}">${fuD.label}</span>
+          <span class="crm-step">${stepLbl}</span>
+          ${li}
+        </div>
+      </div>
+      <div class="crm-actions-row">
+        <button class="btn btn-blue" style="font-size:10px;padding:5px 12px" onclick="draftCRM('${ct.firstName.replace(/'/g,"\\'")} ${(ct.lastName||'').replace(/'/g,"\\'")}','${(co?.name||'').replace(/'/g,"\\'")}','${ct.title||''}','${stepLbl}')">Draft</button>
+        <button class="btn" style="font-size:10px;padding:5px 12px" onclick="openCRMToContact('${ct.id}')">Open CRM</button>
+      </div>
+    </div>`;
+  }
+
+  const todayEl=document.getElementById('crm-today-list');
+  const overdueEl=document.getElementById('crm-overdue-list');
+  todayEl.innerHTML=todayContacts.length?todayContacts.map(c=>makeCard(c,'today')).join(''):'<p style="font-size:12px;color:var(--text3);padding:6px 0">Nothing due today.</p>';
+  overdueEl.innerHTML=overdueContacts.slice(0,8).map(c=>makeCard(c,'overdue')).join('')+(overdueContacts.length>8?`<p style="font-size:11px;color:var(--text3);text-align:center;padding:8px 0">+${overdueContacts.length-8} more — open CRM to see all</p>`:'');
+}
+
+function draftCRM(name,co,title,step){
+  const stepCtx={
+    'Tap':'Message 2 tap — 1-2 lines, no re-pitch, confident close: "do you have 15 minutes Tuesday or Wednesday?"',
+    'Follow Up':'Message 3 — add sponsor value context, name-drop 2 vendors from the GDS sponsor list, binary close',
+    'Breakup':'Message 4 breakup — final message, acknowledge busy, one last close, leave door open'
+  };
+  openDraftDrawer('Draft CRM message for '+name,
+    'Draft a GDS LinkedIn message to '+name+', '+title+' at '+co+'. This is the '+step+' message: '+(stepCtx[step]||'next message in sequence')+'. GDS outreach mode — peer level, never say event or partnership, give 2 specific day options. '+toneInstruction(),
+    null);
+}
+
+// ── CRM Stats ────────────────────────────────────────────────────
+function updateStats(){
+  document.getElementById('s-co').textContent=companies.length;
+  document.getElementById('s-ov').textContent=contacts.filter(isOverdue).length;
+  document.getElementById('s-td').textContent=contacts.filter(isDueToday).length;
+  document.getElementById('s-ac').textContent=contacts.filter(c=>['active','takeaway'].includes(c.status)).length;
+  document.getElementById('s-bk').textContent=contacts.filter(c=>c.status==='booked').length;
+}
+
+// ── CRM Filter ───────────────────────────────────────────────────
+function setFilter(f,el){
+  currentFilter=f;
+  document.querySelectorAll('.filter-pill').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  if(el&&el.classList.contains('filter-pill'))el.classList.add('active');
+  if(el&&el.classList.contains('nav-item'))el.classList.add('active');
+  render();
+}
+
+// ── CRM Render ───────────────────────────────────────────────────
+function render(){
+  const searchEl=document.getElementById('searchInput');
+  const q=searchEl?searchEl.value.toLowerCase():'';
+  let cos=[...companies];
+  if(currentFilter==='no-contacts')cos=cos.filter(c=>contacts.filter(ct=>ct.companyId===c.id).length===0);
+  else if(currentFilter==='booked')cos=cos.filter(c=>contacts.some(ct=>ct.companyId===c.id&&ct.status==='booked'));
+  else if(currentFilter==='overdue')cos=cos.filter(c=>contacts.some(ct=>ct.companyId===c.id&&isOverdue(ct)));
+  else if(currentFilter==='today')cos=cos.filter(c=>contacts.some(ct=>ct.companyId===c.id&&isDueToday(ct)));
+  else if(currentFilter==='active-only')cos=cos.filter(c=>contacts.some(ct=>ct.companyId===c.id&&['active','takeaway'].includes(ct.status)));
+  if(q)cos=cos.filter(c=>c.name.toLowerCase().includes(q)||contacts.some(ct=>ct.companyId===c.id&&`${ct.firstName} ${ct.lastName} ${ct.title}`.toLowerCase().includes(q)));
+  cos.sort((a,b)=>{
+    const aOv=contacts.some(ct=>ct.companyId===a.id&&isOverdue(ct));
+    const bOv=contacts.some(ct=>ct.companyId===b.id&&isOverdue(ct));
+    if(aOv&&!bOv)return-1;if(!aOv&&bOv)return 1;
+    const aTd=contacts.some(ct=>ct.companyId===a.id&&isDueToday(ct));
+    const bTd=contacts.some(ct=>ct.companyId===b.id&&isDueToday(ct));
+    if(aTd&&!bTd)return-1;if(!aTd&&bTd)return 1;
+    return a.name.localeCompare(b.name);
+  });
+  const tbody=document.getElementById('tbody');
+  const empty=document.getElementById('emptyState');
+  if(!tbody)return;
+  if(cos.length===0){tbody.innerHTML='';empty.classList.remove('hidden');updateStats();return;}
+  empty.classList.add('hidden');
+  let html='';
+  for(const co of cos){
+    const cts=contacts.filter(c=>c.companyId===co.id);
+    const isOpen=expandedCos.has(co.id);
+    const fu=coNextFU(co.id);
+    const _partner=co.isPartner||isGDSPartner(co.name);
+    const _skip=co.isSkipped&&!_partner;
+    const _nameClass=_partner?'partner-name':(_skip?'skip-name':'');
+    const _tag=_partner?'<span class="gds-sponsor-tag">🤝 GDS Sponsor</span>':(_skip?'<span class="gds-skip-tag">⚡ Skip</span>':'');
+    html+=`<tr class="co-row${isOpen?' open':''}" onclick="toggleCo('${co.id}')">
+      <td><div class="co-name-wrap"><span class="co-arrow">▶</span><span class="${_nameClass}">${co.name}</span>${_tag}</div><div class="co-meta">${co.whatTheyDo||''}</div></td>
+      <td><span class="co-badge">${cts.length} contact${cts.length!==1?'s':''}</span></td>
+      <td><span class="co-badge" title="${co.titles||''}">${co.titles||'—'}</span></td>
+      <td><span class="${fu.cls}">${fu.label}</span></td>
+      <td colspan="7" style="text-align:right">
+        <button class="tbl-btn" onclick="event.stopPropagation();openCtModal('${co.id}')">+ Contact</button>
+        <span class="co-tag-btns">
+          <button class="tbl-btn-sponsor ${_partner?'is-sponsor':''}" onclick="event.stopPropagation();togglePartner('${co.id}',event)">${_partner?'🤝 Sponsor':'🤝 Sponsor'}</button>
+          <button class="tbl-btn-skip ${_skip?'is-skip':''}" onclick="event.stopPropagation();toggleSkip('${co.id}',event)">⚡ Skip</button>
+        </span>
+        <button class="tbl-btn" onclick="event.stopPropagation();openCoEditModal('${co.id}')">Edit</button>
+      </td>
+    </tr>`;
+    for(const ct of cts){
+      const fuD=fuDisplay(ct);
+      const steps=CADENCE[ct.channel]||CADENCE.linkedin;
+      const stepLbl=steps[parseInt(ct.step)||0]?.label||'—';
+      html+=`<tr class="contact-row${isOpen?' visible':''}" onclick="openCtEditModal('${ct.id}')">
+        <td></td><td></td><td></td><td></td>
+        <td><strong>${ct.firstName} ${ct.lastName||''}</strong></td>
+        <td style="color:var(--text2);font-size:11px">${ct.title||''}</td>
+        <td><span class="badge ${CHBADGE[ct.channel]||'badge-li'}">${CHLABEL[ct.channel]||'LI'}</span></td>
+        <td><span class="step-pill">${stepLbl}</span></td>
+        <td style="color:var(--text2);font-size:11px">${fmtDate(ct.lastContact)}</td>
+        <td><span class="${fuD.cls}">${fuD.label}</span></td>
+        <td><span class="sdot ${DOTCLS[ct.status]||'dot-active'}"></span><span style="font-size:11px;color:var(--text3)">${STLABEL[ct.status]||'Active'}</span></td>
+        <td>${ct.linkedin?`<button class="li-btn" onclick="event.stopPropagation();window.open('${ct.linkedin}','_blank')">in</button>`:''}</td>
+      </tr>`;
+    }
+    html+=`<tr class="add-contact-row${isOpen?' visible':''}">
+      <td colspan="12"><button class="add-ct-inline" onclick="event.stopPropagation();openCtModal('${co.id}')">+ Add contact to ${co.name}</button></td>
+    </tr>`;
+  }
+  tbody.innerHTML=html;
+  updateStats();
+}
+
+function toggleCo(id){
+  if(expandedCos.has(id))expandedCos.delete(id);else expandedCos.add(id);
+  saveData();render();
+}
+
+// ── CRM sidebar / view switching ─────────────────────────────────
+function toggleCRMSidebar(){
+  const sb=document.getElementById('crm-sidebar');
+  const tog=document.getElementById('crmSidebarToggle');
+  sb.classList.toggle('collapsed');
+  tog.textContent=sb.classList.contains('collapsed')?'›':'‹';
+}
+function switchCRMView(view,el){
+  currentCRMView=view;
+  document.querySelectorAll('.nav-item[id^="nav-"]').forEach(n=>n.classList.remove('active'));
+  if(el)el.classList.add('active');
+  const tw=document.getElementById('crm-tracker-view');
+  const cb=document.getElementById('crm-controls-bar');
+  const sw=document.getElementById('crm-stats-strip');
+  const vc=document.getElementById('crm-contacts-view');
+  const vco=document.getElementById('crm-companies-view');
+  tw.style.display=view==='tracker'?'':'none';
+  cb.style.display=view==='tracker'?'':'none';
+  sw.style.display=view==='tracker'?'':'none';
+  vc.classList.toggle('visible',view==='contacts');
+  vco.classList.toggle('visible',view==='companies');
+  const h=document.getElementById('crm-view-title');
+  if(view==='tracker')h.textContent='Prospect Tracker';
+  else if(view==='contacts')h.textContent='Contacts';
+  else h.textContent='Companies';
+  if(view==='contacts')renderContactsList();
+  if(view==='companies')renderCompaniesList();
+}
+
+// ── Company modal ─────────────────────────────────────────────────
+function openCoModal(){
+  editingCoId=null;
+  document.getElementById('coModalTitle').textContent='Add Company';
+  document.getElementById('coModalSub').textContent='';
+  document.getElementById('coDelBtn').classList.add('hidden');
+  ['c-name','c-website','c-what','c-titles','c-comp','c-notes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('coOverlay').classList.remove('hidden');
+}
+function openCoEditModal(id){
+  const co=companies.find(c=>c.id===id);if(!co)return;
+  editingCoId=id;
+  document.getElementById('coModalTitle').textContent=co.name;
+  document.getElementById('coModalSub').textContent='Edit company';
+  document.getElementById('coDelBtn').classList.remove('hidden');
+  document.getElementById('c-name').value=co.name||'';
+  document.getElementById('c-website').value=co.website||'';
+  document.getElementById('c-what').value=co.whatTheyDo||'';
+  document.getElementById('c-titles').value=co.titles||'';
+  document.getElementById('c-comp').value=co.competitors||'';
+  document.getElementById('c-notes').value=co.notes||'';
+  document.getElementById('coOverlay').classList.remove('hidden');
+}
+function closeCoModal(){document.getElementById('coOverlay').classList.add('hidden');editingCoId=null;}
+function saveCo(){
+  const name=document.getElementById('c-name').value.trim();
+  if(!name){alert('Company name required.');return;}
+  const co={id:editingCoId||Date.now().toString(36)+Math.random().toString(36).slice(2),
+    name,website:document.getElementById('c-website').value.trim(),whatTheyDo:document.getElementById('c-what').value.trim(),
+    titles:document.getElementById('c-titles').value.trim(),
+    competitors:document.getElementById('c-comp').value.trim(),
+    notes:document.getElementById('c-notes').value.trim()};
+  if(editingCoId){const i=companies.findIndex(c=>c.id===editingCoId);if(i>=0)companies[i]=co;}
+  else companies.push(co);
+  saveData();render();closeCoModal();
+  if(typeof renderCompaniesList==='function'&&document.getElementById('crm-companies-view')?.classList.contains('visible'))renderCompaniesList();
+}
+function deleteCo(){
+  if(!editingCoId||!confirm('Delete this company and ALL its contacts?'))return;
+  companies=companies.filter(c=>c.id!==editingCoId);
+  contacts=contacts.filter(c=>c.companyId!==editingCoId);
+  saveData();render();closeCoModal();
+  if(typeof renderCompaniesList==='function'&&document.getElementById('crm-companies-view')?.classList.contains('visible'))renderCompaniesList();
+}
+
+// ── Contact modal ─────────────────────────────────────────────────
+function openCtModal(coId){
+  addingToCoId=coId;editingCtId=null;
+  const co=companies.find(c=>c.id===coId);
+  document.getElementById('ctModalTitle').textContent=`Add Contact — ${co?.name||''}`;
+  document.getElementById('ctModalSub').textContent='';
+  document.getElementById('ctDelBtn').classList.add('hidden');
+  ['ct-fn','ct-ln','ct-email','ct-li','ct-phone','ct-notes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('ct-title').value='CEO';
+  document.getElementById('ct-channel').value='linkedin';
+  document.getElementById('ct-status').value='active';
+  document.getElementById('ct-date').value=new Date().toISOString().split('T')[0];
+  document.getElementById('ct-reengage').value='';
+  toggleReengageField();
+  setCoInfoBox(co);buildStepOptions('linkedin',0);
+  document.getElementById('ctOverlay').classList.remove('hidden');
+}
+function openCtEditModal(id){
+  const ct=contacts.find(c=>c.id===id);if(!ct)return;
+  editingCtId=id;addingToCoId=ct.companyId;
+  const co=companies.find(c=>c.id===ct.companyId);
+  document.getElementById('ctModalTitle').textContent=`${ct.firstName} ${ct.lastName||''}`;
+  document.getElementById('ctModalSub').textContent=`${ct.title||''} · ${co?.name||''}`;
+  document.getElementById('ctDelBtn').classList.remove('hidden');
+  document.getElementById('ct-fn').value=ct.firstName||'';
+  document.getElementById('ct-ln').value=ct.lastName||'';
+  document.getElementById('ct-title').value=ct.title||'CEO';
+  document.getElementById('ct-channel').value=ct.channel||'linkedin';
+  document.getElementById('ct-email').value=ct.email||'';
+  document.getElementById('ct-li').value=ct.linkedin||'';
+  document.getElementById('ct-phone').value=ct.phone||'';
+  document.getElementById('ct-status').value=ct.status||'active';
+  document.getElementById('ct-date').value=ct.lastContact||'';
+  document.getElementById('ct-notes').value=ct.notes||'';
+  document.getElementById('ct-reengage').value=ct.reengageDate||'';
+  toggleReengageField();
+  setCoInfoBox(co);buildStepOptions(ct.channel||'linkedin',ct.step||0);
+  document.getElementById('ctOverlay').classList.remove('hidden');
+}
+function closeCtModal(){document.getElementById('ctOverlay').classList.add('hidden');editingCtId=null;addingToCoId=null;}
+function toggleReengageField(){
+  const isWait=document.getElementById('ct-status').value==='wait';
+  document.getElementById('reengage-wrap').classList.toggle('hidden',!isWait);
+  if(!isWait)document.getElementById('ct-reengage').value='';
+}
+function setCoInfoBox(co){
+  if(!co){document.getElementById('coInfoBox').innerHTML='';return;}
+  document.getElementById('coInfoBox').innerHTML=`
+    <div class="row"><span class="lbl">What They Do</span><span class="val">${co.whatTheyDo||'—'}</span></div>
+    <div class="row"><span class="lbl">Target Titles</span><span class="val">${co.titles||'—'}</span></div>
+    <div class="row"><span class="lbl">Competitors</span><span class="val">${co.competitors||'—'}</span></div>
+    ${co.notes?`<div class="row"><span class="lbl">Notes</span><span class="val">${co.notes}</span></div>`:''}`;
+}
+function saveCt(){
+  const fn=document.getElementById('ct-fn').value.trim();
+  if(!fn){alert('First name required.');return;}
+  const ct={id:editingCtId||Date.now().toString(36)+Math.random().toString(36).slice(2),
+    companyId:addingToCoId,firstName:fn,
+    lastName:document.getElementById('ct-ln').value.trim(),
+    title:document.getElementById('ct-title').value,
+    channel:document.getElementById('ct-channel').value,
+    email:document.getElementById('ct-email').value.trim(),
+    linkedin:document.getElementById('ct-li').value.trim(),
+    phone:document.getElementById('ct-phone').value.trim(),
+    step:parseInt(document.getElementById('ct-step').value)||0,
+    status:document.getElementById('ct-status').value,
+    lastContact:document.getElementById('ct-date').value,
+    reengageDate:document.getElementById('ct-reengage').value||null,
+    notes:document.getElementById('ct-notes').value.trim()};
+  if(editingCtId){const i=contacts.findIndex(c=>c.id===editingCtId);if(i>=0)contacts[i]=ct;}
+  else contacts.push(ct);
+  expandedCos.add(addingToCoId);
+  saveData();render();closeCtModal();updateDashboardCRMStats();
+  if(typeof renderContactsList==='function'&&document.getElementById('crm-contacts-view')?.classList.contains('visible'))renderContactsList();
+}
+function deleteCt(){
+  if(!editingCtId||!confirm('Delete this contact?'))return;
+  contacts=contacts.filter(c=>c.id!==editingCtId);
+  saveData();render();closeCtModal();updateDashboardCRMStats();
+  if(typeof renderContactsList==='function'&&document.getElementById('crm-contacts-view')?.classList.contains('visible'))renderContactsList();
+}
+
+// ── Cadence panel ─────────────────────────────────────────────────
+function buildStepOptions(channel,selected){
+  const steps=CADENCE[channel]||CADENCE.linkedin;
+  const sel=document.getElementById('ct-step');
+  sel.innerHTML=steps.map((s,i)=>`<option value="${i}"${i==selected?' selected':''}>${s.label}</option>`).join('');
+  updateCadencePanel();
+}
+function updateCadencePanel(){
+  const channel=document.getElementById('ct-channel').value;
+  const idx=parseInt(document.getElementById('ct-step').value)||0;
+  const steps=CADENCE[channel]||CADENCE.linkedin;
+  const cur=steps[idx];
+  // These elements were removed from the modal — skip gracefully if absent
+  const stepNavEl=document.getElementById('stepNav');
+  const stepLblEl=document.getElementById('stepLbl');
+  const timingTagEl=document.getElementById('timingTag');
+  const ttextEl=document.getElementById('ttext');
+  if(stepNavEl)stepNavEl.innerHTML=steps.map((s,i)=>{
+    const cls=i<idx?'sn done':i===idx?'sn current':'sn';
+    return`<button class="${cls}" title="${s.label}" onclick="document.getElementById('ct-step').value=${i};updateCadencePanel();">${i+1}</button>`;
+  }).join('');
+  if(cur){
+    if(stepLblEl)stepLblEl.textContent=cur.label;
+    if(timingTagEl){timingTagEl.textContent=`⏱ ${cur.timing}`;timingTagEl.classList.remove('hidden');}
+    const html=cur.text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/\[([^\]]+)\]/g,'<span class="ph">[$1]</span>').replace(/\n/g,'<br>');
+    if(ttextEl)ttextEl.innerHTML='<button class="copy-btn" onclick="copyTpl()">Copy</button>'+html;
+  }else{
+    if(stepLblEl)stepLblEl.textContent='Sequence complete.';
+    if(timingTagEl)timingTagEl.classList.add('hidden');
+    if(ttextEl)ttextEl.innerHTML='<span style="color:var(--text3)">All steps done — mark as Long Wait or Won/Lost.</span>';
+  }
+}
+function copyTpl(){
+  const channel=document.getElementById('ct-channel').value;
+  const idx=parseInt(document.getElementById('ct-step').value)||0;
+  const cur=(CADENCE[channel]||CADENCE.linkedin)[idx];
+  if(!cur)return;
+  navigator.clipboard.writeText(cur.text).then(()=>{
+    const btn=document.querySelector('.copy-btn');btn.textContent='✓ Copied';
+    setTimeout(()=>btn.textContent='Copy',1800);
+  });
+}
+
+// ── Contacts / Companies list views ───────────────────────────────
+function renderContactsList(){
+  const searchEl=document.getElementById('contacts-search');
+  if(!searchEl)return;
+  const q=(searchEl.value||'').toLowerCase();
+  let cts=[...contacts];
+  if(q)cts=cts.filter(c=>`${c.firstName} ${c.lastName} ${c.title}`.toLowerCase().includes(q)||
+    (companies.find(co=>co.id===c.companyId)?.name||'').toLowerCase().includes(q));
+  cts.sort((a,b)=>`${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`));
+  document.getElementById('contacts-count-label').textContent=`${cts.length} contact${cts.length!==1?'s':''}`;
+  const tbody=document.getElementById('contacts-tbody');
+  if(!cts.length){tbody.innerHTML='<tr><td colspan="8" style="padding:40px;text-align:center;color:var(--text3)">No contacts found</td></tr>';return;}
+  const stcache={};
+  tbody.innerHTML=cts.map(ct=>{
+    const co=companies.find(c=>c.id===ct.companyId);
+    const fuD=fuDisplay(ct);
+    if(!stcache[ct.channel])stcache[ct.channel]=CADENCE[ct.channel]||CADENCE.linkedin;
+    const stepLbl=stcache[ct.channel][parseInt(ct.step)||0]?.label||'—';
+    return `<tr style="background:var(--surface);border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s" onmouseover="this.style.background='var(--surface-elevated)'" onmouseout="this.style.background='var(--surface)'" onclick="openCtEditModal('${ct.id}')">
+      <td style="padding:10px 10px;font-weight:600;font-size:12px">${ct.firstName} ${ct.lastName||''}</td>
+      <td style="padding:10px 10px;font-size:11px;color:var(--text2)">${ct.title||''}</td>
+      <td style="padding:10px 10px;font-size:12px;color:var(--accent)">${co?.name||'—'}</td>
+      <td style="padding:10px 10px"><span class="badge ${CHBADGE[ct.channel]||'badge-li'}">${CHLABEL[ct.channel]||'LI'}</span></td>
+      <td style="padding:10px 10px"><span class="step-pill">${stepLbl}</span></td>
+      <td style="padding:10px 10px"><span class="sdot ${DOTCLS[ct.status]||'dot-active'}"></span><span style="font-size:11px;color:var(--text3)">${STLABEL[ct.status]||'Active'}</span></td>
+      <td style="padding:10px 10px"><span class="${fuD.cls}">${fuD.label}</span></td>
+      <td style="padding:10px 10px">${ct.linkedin?`<button class="li-btn" onclick="event.stopPropagation();window.open('${ct.linkedin}','_blank')">in</button>`:''}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderCompaniesList(){
+  const searchEl=document.getElementById('companies-search');
+  if(!searchEl)return;
+  const q=(searchEl.value||'').toLowerCase();
+  let cos=[...companies];
+  if(q)cos=cos.filter(c=>c.name.toLowerCase().includes(q)||(c.whatTheyDo||'').toLowerCase().includes(q));
+  cos.sort((a,b)=>a.name.localeCompare(b.name));
+  document.getElementById('companies-count-label').textContent=`${cos.length} companies — click to add/edit notes`;
+  const grid=document.getElementById('companies-grid');
+  grid.innerHTML=cos.map(co=>{
+    const ctCount=contacts.filter(c=>c.companyId===co.id).length;
+    const hasOverdue=contacts.some(c=>c.companyId===co.id&&isOverdue(c));
+    const bc=hasOverdue?'var(--red)':'var(--border)';
+    const _partner=co.isPartner||isGDSPartner(co.name);
+    const _skip=co.isSkipped&&!_partner;
+    return `<div style="background:var(--surface);border:1px solid ${bc};border-radius:var(--radius);padding:14px 16px;cursor:pointer;transition:all .15s;box-shadow:var(--shadow)" onclick="openCoEditModal('${co.id}')" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='${bc}'">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:13px;font-weight:600;color:${_partner?'#c2410c':_skip?'var(--amber)':'var(--text)'}">${co.name}${_partner?'<span class="gds-sponsor-tag">Sponsor</span>':''}${_skip?'<span class="gds-skip-tag">Skip</span>':''}</div>
+        <span style="font-size:10px;font-family:var(--font-mono);background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--accent);padding:2px 8px;border-radius:20px">${ctCount} contact${ctCount!==1?'s':''}</span>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px;line-height:1.4">${co.whatTheyDo||'—'}</div>
+      <div style="font-size:11px;color:var(--text2);line-height:1.4;border-top:1px solid var(--border);padding-top:8px;margin-top:4px">${co.notes?co.notes:'<span style="color:var(--text3);font-style:italic">Click to add notes</span>'}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">${co.competitors?`<div style="font-size:10px;color:var(--accent);font-family:var(--font-mono)">vs: ${co.competitors}</div>`:''}
+      ${co.website?`<a href="${co.website}" target="_blank" onclick="event.stopPropagation()" style="font-size:10px;color:var(--text3);font-family:var(--font-mono);text-decoration:none;padding:2px 8px;border:1px solid var(--border);border-radius:20px;transition:all .15s" onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border)'">↗ site</a>`:''}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── Seed data ─────────────────────────────────────────────────────
+const SEED=[
+  {name:"Agility Partners",whatTheyDo:"IT staffing & talent solutions — contract and permanent placement",titles:"IT Managers, CTOs, HR/Talent Acquisition",competitors:"TEKsystems, Apex Group, Robert Half"},
+  {name:"Ashby",whatTheyDo:"All-in-one recruiting platform — ATS, CRM, scheduling, analytics",titles:"Recruiting Leads, TA Directors, HR Leaders, CHROs",competitors:"Greenhouse, Lever, Workday, SmartRecruiters"},
+  {name:"Avistos",whatTheyDo:"Revenue acceleration platform for high-growth B2B sales teams",titles:"CRO, VP Sales, Head of Revenue, VP Growth",competitors:"Outreach, Salesloft, Gong, Apollo"},
+  {name:"Beamery",whatTheyDo:"Talent lifecycle management CRM for enterprise sourcing and retention",titles:"CHROs, VP Talent, Head of People Analytics",competitors:"Eightfold AI, Phenom, Gem, iCIMS"},
+  {name:"Bear Claw",whatTheyDo:"HR tech consulting and staffing solutions to optimize TA and HR",titles:"CHRO, VP HR, TA Directors, HR Ops Managers",competitors:"Accenture HR, Mercer, Korn Ferry"},
+  {name:"Bullhorn",whatTheyDo:"Leading CRM and ATS for the global staffing and recruitment industry",titles:"Staffing Executives, IT Directors, TA Ops",competitors:"JobDiva, Ceipal, Vincere, Salesforce"},
+  {name:"Criteria Corp",whatTheyDo:"Pre-employment assessment software for data-driven hiring decisions",titles:"VP HR, CHRO, Head of Talent, Recruiting Directors",competitors:"HireVue, Pymetrics, TestGorilla, Codility"},
+  {name:"DISA Global Solutions",whatTheyDo:"Employment screening, drug testing, and compliance solutions for enterprise",titles:"CEO, CRO, SVP Sales, VP Marketing",competitors:"First Advantage, Sterling, Checkr, HireRight"},
+  {name:"Eightfold AI",whatTheyDo:"AI-native talent intelligence platform for matching, sourcing, internal mobility",titles:"CHROs, VP Talent Acquisition, Head of People Analytics",competitors:"Phenom, Beamery, Gloat, SeekOut"},
+  {name:"Employ",whatTheyDo:"SMB recruiting platform powering JazzHR, Lever, Jobvite, and NXTThing",titles:"CEO, CMO, CRO, VP Marketing, VP Growth",competitors:"Greenhouse, iCIMS, BambooHR, Workday"},
+  {name:"Fetcher",whatTheyDo:"Sourcing automation — AI + human-in-the-loop candidate verification",titles:"Head of Talent, Sourcing Managers",competitors:"hireEZ, Gem, SeekOut, Loxo"},
+  {name:"Findem",whatTheyDo:"Talent intelligence — automates sourcing based on person-centric data",titles:"TA Leaders, People Analytics, Head of Sourcing",competitors:"SeekOut, Eightfold AI, hireEZ, Beamery"},
+  {name:"FindPro Group",whatTheyDo:"AI-powered platform to source, hire, and manage global technical talent",titles:"CTO, VP Engineering, Head of Talent, TA Managers",competitors:"Toptal, Upwork, Andela, Turing"},
+  {name:"Fountain",whatTheyDo:"High-volume hiring automation for the frontline workforce",titles:"Head of Hourly Hiring, VP Ops, HR Directors",competitors:"Paradox, Emi, Workday, Harver"},
+  {name:"Gem",whatTheyDo:"Recruiting CRM and automation for sourcing and pipeline analytics",titles:"Recruiting Managers, Sourcing Leads, Head of Talent",competitors:"hireEZ, SeekOut, Loxo, Beamery"},
+  {name:"GoodTime",whatTheyDo:"Interview scheduling automation for complex panels and interviewer rotations",titles:"Recruiting Ops, TA Coordinators, Head of Talent",competitors:"Paradox, Prelude, Chili Piper, Calendly"},
+  {name:"Grayscale",whatTheyDo:"Text-based candidate engagement — automates status updates",titles:"TA Managers, Candidate Experience Leads",competitors:"Sense, Paradox, TextRecruit, Yello"},
+  {name:"Greenhouse",whatTheyDo:"ATS and recruiting software for structured hiring processes",titles:"TA Leaders, Recruiters, HR Directors, CHROs, People Ops",competitors:"Lever, Workday, iCIMS, SmartRecruiters, Taleo"},
+  {name:"Harver",whatTheyDo:"AI-driven pre-employment assessment and volume hiring automation",titles:"VP Talent Acquisition, Head of Global Sourcing",competitors:"HireVue, Paradox, Modern Hire, TestGorilla"},
+  {name:"HelloSky",whatTheyDo:"AI-powered revenue intelligence platform — prioritizes outreach using AI",titles:"CROs, VP Sales, Sales Ops, Revenue Ops",competitors:"Gong, Clari, Chorus, Salesloft, Apollo.io"},
+  {name:"hireEZ",whatTheyDo:"Outbound sourcing platform with agentic AI for passive candidate discovery",titles:"Sourcers, Talent Partners, TA Directors",competitors:"Gem, SeekOut, Findem, LinkedIn Recruiter"},
+  {name:"HireVue",whatTheyDo:"Video interviewing and AI-driven assessment platform",titles:"VP TA, Head of Recruiting, CHRO, TA Director",competitors:"Paradox, Modern Hire, Spark Hire, Harver"},
+  {name:"Humanly",whatTheyDo:"AI platform automating initial candidate screening and interview scheduling",titles:"TA Managers, Recruiting Ops, HR Directors",competitors:"Paradox, Emi, Fountain, Grayscale"},
+  {name:"iCIMS",whatTheyDo:"Enterprise talent cloud — ATS, CRM, and high-volume automation tools",titles:"CHROs, VP TA, HR Digital Transformation Leads",competitors:"Workday, Oracle, SAP SuccessFactors"},
+  {name:"Jobcase",whatTheyDo:"Online community and platform connecting working-class job seekers with employers",titles:"CRO, VP Sales, VP Marketing",competitors:"Indeed, ZipRecruiter, Snagajob"},
+  {name:"Joveo",whatTheyDo:"Programmatic job advertising platform for targeted talent acquisition at scale",titles:"CEO, CMO, VP Sales, VP Strategic Growth",competitors:"Appcast, Recruitics, PandoLogic, Bayard"},
+  {name:"Juicebox",whatTheyDo:"AI-powered people search and talent intelligence for recruiters",titles:"CEO, VP Sales, Head of Talent",competitors:"SeekOut, hireEZ, LinkedIn Recruiter, Findem"},
+  {name:"Karat",whatTheyDo:"Technical interviewing as a service — conducts engineering interviews at scale",titles:"CRO, CMO, VP Sales, Head of Partnerships",competitors:"HackerRank, CoderPad, Codility"},
+  {name:"LevelUP HCS",whatTheyDo:"HR consulting and workforce solutions for mid-market and enterprise organizations",titles:"CEO, VP HR, Head of Talent",competitors:"Mercer, Korn Ferry, Accenture HR"},
+  {name:"Lever",whatTheyDo:"Talent acquisition suite combining ATS and CRM for reactive hiring",titles:"TA Managers, Sourcing Leads, CHROs",competitors:"Greenhouse, Ashby, Gem, SmartRecruiters"},
+  {name:"Loxo",whatTheyDo:"AI-powered talent intelligence platform — ATS/CRM for recruiters",titles:"Agency Recruiters, TA Leaders, Sourcing Managers",competitors:"Bullhorn, JobAdder, Vincere, Crelate"},
+  {name:"Metaview",whatTheyDo:"AI-powered interview intelligence — captures and summarizes interviews",titles:"TA Leaders, Recruiting Managers, HR VPs, CHROs",competitors:"Noota, Interviewer.AI, Willow, HireVue AI"},
+  {name:"OSI Engineering",whatTheyDo:"Technical staffing and engineering talent solutions across multiple industries",titles:"SVP Sales, CEO, VP Business Development",competitors:"TEKsystems, Apex Group, Insight Global, Experis"},
+  {name:"Paraform",whatTheyDo:"Recruiting marketplace connecting companies with top-tier independent recruiters",titles:"CEO, VP Sales, Head of Talent",competitors:"Toptal, Hired, Vettery, Cord"},
+  {name:"Paradox (Olivia)",whatTheyDo:"Conversational AI automating screening and scheduling via chat",titles:"VP Talent Acquisition, Head of Recruiting Ops",competitors:"Humanly, Emi, Fountain, HireVue"},
+  {name:"People Data Labs",whatTheyDo:"B2B data platform providing enriched person and company data via API",titles:"CEO, VP Sales, Head of Partnerships",competitors:"ZoomInfo, Clearbit, Apollo, Lusha"},
+  {name:"Phenom",whatTheyDo:"Talent Experience Platform — AI-driven CRM and career sites",titles:"VP Talent Acquisition, Employer Branding Lead",competitors:"Eightfold AI, Beamery, iCIMS, Oracle"},
+  {name:"PNI-HCM",whatTheyDo:"Payroll, HR, and workforce management solutions for mid-market companies",titles:"President & CEO, Chairman, HR Directors",competitors:"ADP, Paychex, Paylocity, Paycom"},
+  {name:"QLU.ai",whatTheyDo:"AI recruiting platform predicting candidate-job fit using behavioral data",titles:"CHROs, TA VPs, Recruiting Ops Leaders",competitors:"Pymetrics (Harver), HireVue, Paradox, Eightfold"},
+  {name:"Recruitics",whatTheyDo:"Recruitment marketing analytics and programmatic job advertising platform",titles:"CEO, CRO, VP Sales, VP Performance Marketing",competitors:"Appcast, Joveo, PandoLogic, Bayard"},
+  {name:"RippleMatch",whatTheyDo:"Campus recruiting automation platform for early-career talent pipelines",titles:"CEO, Director of Marketing, VP Sales",competitors:"Handshake, WayUp, Yello, iCIMS Campus"},
+  {name:"RST Solutions",whatTheyDo:"IT staffing and technology solutions — talent placement",titles:"IT Directors, Engineering Managers, HR/TA",competitors:"Insight Global, Apex, TEKsystems, Randstad"},
+  {name:"SeekOut",whatTheyDo:"Talent discovery platform — automates sourcing across niche talent pools",titles:"Technical Recruiters, Diversity Leads, TA VPs",competitors:"hireEZ, Findem, Gem, LinkedIn Recruiter"},
+  {name:"Sense",whatTheyDo:"AI-powered talent engagement platform for staffing agencies",titles:"VP Recruiting Ops, Regional Managers, Talent VPs",competitors:"Herefish (Bullhorn), Clinch, TextUs, Grayscale"},
+  {name:"SmartRecruiters",whatTheyDo:"Enterprise talent acquisition platform — ATS + CRM for hiring at scale",titles:"CHROs, TA VPs, HR Directors, Recruiting Ops",competitors:"Greenhouse, iCIMS, Lever, Workday Recruiting"},
+  {name:"Softcom Systems",whatTheyDo:"IT staffing and software solutions for enterprise transformation projects",titles:"CEO, VP Sales, IT Directors",competitors:"Infosys BPM, Wipro, Cognizant, TEKsystems"},
+  {name:"Spark Hire",whatTheyDo:"Video interviewing platform for one-way and live interviews",titles:"Recruiters, TA Managers, HR Directors, Hiring Managers",competitors:"HireVue, Vidyard, Montage, Modern Hire"},
+  {name:"Spencer Thomas",whatTheyDo:"HR consulting and talent management advisory services",titles:"VP Marketing, CHRO, HR Directors",competitors:"Mercer, Korn Ferry, Deloitte HR"},
+  {name:"Talview",whatTheyDo:"AI-powered talent assessment and video interviewing platform",titles:"TA Leaders, L&D Directors, HR VPs, Campus Recruiting",competitors:"HireVue, Codility, Mettl (Mercer), Vervoe"},
+  {name:"Textio",whatTheyDo:"Augmented writing platform optimizing job posts and HR content for inclusion",titles:"CEO, VP Marketing, Head of TA, CHRO",competitors:"Ongig, Applied, Datapeople, Appcast"},
+  {name:"TiLT",whatTheyDo:"Leave management and employee support platform for absences",titles:"HR Directors, Leave Administrators, Benefits Managers, CHROs",competitors:"AbsenceSoft, Unum, Lincoln Financial, Alight"},
+  {name:"Yello",whatTheyDo:"Campus and early talent recruiting CRM and event management platform",titles:"CRO, Co-Founder, COO, VP Sales",competitors:"Handshake, RippleMatch, iCIMS Campus, Phenom"},
+  {name:"Zinfi Technologies",whatTheyDo:"Partner relationship management (PRM) and channel marketing platform",titles:"CEO, VP Sales, Channel Marketing Leaders",competitors:"Alliances, Impartner, Zift Solutions"},
+];
+
+const CONTACT_IMPORT=[
+  ["Agility Partners","Alan","Kutasy","CEO","active","linkedin",0,"(614) 507-5880","alan@agilitypartners.io","",null,""],
+  ["Ashby","Mike","Clapson","Other","active","linkedin",0,"","mike@ashbyhq.com","",null,"Vice President, Sales & Revenue Operations"],
+  ["Ashby","Benjamin","Encz","CEO","active","linkedin",0,"","benjamin@ashbyhq.com","",null,""],
+  ["Ashby","Harriet","Johnston","VP Marketing","active","linkedin",0,"","","",null,""],
+  ["Avistos","Eric","Stanchich","Other","active","linkedin",1,"","eric.stanchich@avistos.com","https://www.linkedin.com/in/eric-stanchich-614b659/","2026-03-25","Response received — VP High Growth Accounts"],
+  ["Beamery","Has","Dosanjh","CEO","active","linkedin",0,"","has.dosanjh@beamery.com","",null,""],
+  ["Beamery","Matt","Smith","VP Sales","active","linkedin",0,"","","",null,"Vice President, Sales (Americas)"],
+  ["Beamery","Erinn","Tarpey","CMO","active","linkedin",0,"","","",null,""],
+  ["Bear Claw","Jason","Palmer","CEO","active","linkedin",0,"","","",null,""],
+  ["Criteria Corp","Jamshed","Khan","CMO","active","linkedin",0,"","jam.khan@criteriacorp.com","",null,""],
+  ["Criteria Corp","Josh","Millet","CEO","active","linkedin",0,"","josh@criteriacorp.com","",null,""],
+  ["DISA Global Solutions","John","Peterson","CEO","active","linkedin",0,"","","https://www.linkedin.com/in/john-peterson-8096652a/",null,"Houston"],
+  ["DISA Global Solutions","Gary","Wiese","CRO","active","linkedin",0,"","","https://www.linkedin.com/in/garywiese11",null,"Missouri"],
+  ["DISA Global Solutions","Jessica","Guinn","VP Sales","active","linkedin",0,"","","https://www.linkedin.com/in/jessicaguinn/",null,"SVP of Sales · Knoxville"],
+  ["DISA Global Solutions","Thomas","Hafner","VP Marketing","active","linkedin",0,"","","https://www.linkedin.com/in/thafner/",null,"VP Marketing & Communications"],
+  ["Employ","Jerry","Jao","CEO","active","linkedin",0,"","jerry.jao@employinc.com","",null,""],
+  ["Employ","Suzanne","Tran","CMO","active","linkedin",0,"","suzanne.tran@employinc.com","",null,""],
+  ["Employ","Eric","Waldinger","CRO","active","linkedin",1,"","eric.waldinger@employinc.com","https://www.linkedin.com/in/ericwaldinger/","2026-03-24","LI Message Sent · Chicago"],
+  ["Fetcher","Travis","Keeney","VP Marketing","active","linkedin",0,"(717) 683-4422","travisk@fetcher.ai","https://www.linkedin.com/in/traviskeeney",null,"LI Request Sent"],
+  ["Fetcher","Andres","Blank","CEO","active","linkedin",0,"(727) 710-2602","andres@fetcher.ai","https://www.linkedin.com/in/andresblank",null,"Miami"],
+  ["Fetcher","Christina","Procacci","Other","active","linkedin",0,"(484) 995-6381","christina@fetcher.ai","https://www.linkedin.com/in/christina-procacci",null,"Head of Sales & Renewals · NYC"],
+  ["Findem","Hariharan","Kolam","CEO","active","linkedin",0,"","","",null,""],
+  ["Findem","Liv","Anderman","CMO","active","linkedin",0,"","liv@findem.ai","",null,""],
+  ["Fountain","Sean","Fahey","CEO","active","linkedin",0,"","","https://www.linkedin.com/in/sean-fahey-vid/",null,""],
+  ["GoodTime","Ahryun","Moon","CEO","active","linkedin",0,"","ahryun@goodtime.io","",null,""],
+  ["GoodTime","Ryan","Medine","CMO","active","linkedin",0,"(310) 916-6500","","https://www.linkedin.com/in/rmedine/",null,"LI Request Sent"],
+  ["Grayscale","Tom","Strauss","VP Sales","active","linkedin",1,"","tom.strauss@grayscaleapp.com","https://www.linkedin.com/in/strausstom/","2026-03-24","LI Message Sent · Chicago"],
+  ["Greenhouse","Daniel","Chait","CEO","active","linkedin",0,"","","",null,""],
+  ["Greenhouse","Samir","Joglekar","CRO","active","linkedin",0,"","samir.joglekar@greenhouse.com","",null,""],
+  ["HelloSky","Alex","Bates","CEO","active","linkedin",0,"","alex.bates@hellosky.ai","",null,"Founder & CEO"],
+  ["HelloSky","Michael","Kelch","VP Sales","booked","linkedin",1,"","mike.kelch@hellosky.ai","https://www.linkedin.com/in/mike-kelch/","2026-03-25","2nd Meeting scheduled 03/26/2026"],
+  ["HireVue","Tena","Lyons","VP Marketing","active","linkedin",0,"","","https://www.linkedin.com/in/tenalyons/",null,"Minneapolis"],
+  ["HireVue","Jeremy","Friedman","CEO","active","linkedin",0,"","","https://www.linkedin.com/in/jnfriedman/",null,"New York"],
+  ["Humanly","Prem","Kumar","CEO","active","linkedin",2,"206-240-5729","pkumar00@gmail.com","https://www.linkedin.com/in/premskumar/","2026-03-24","Follow-Up 1 Sent · Seattle"],
+  ["hireEZ","Steven","Jiang","CEO","active","linkedin",0,"(919) 601-1852","stevenjiang@hireez.com","https://www.linkedin.com/in/stevenhireez/",null,"Dallas"],
+  ["hireEZ","Shannon","Pritchett","VP Marketing","active","linkedin",0,"(312) 759-8100","ShannonPritchett@hireez.com","https://www.linkedin.com/in/sourcingshannon/",null,"Dallas"],
+  ["Joveo","Kshitij (KJ)","Jain","CEO","active","linkedin",1,"","kj@joveo.com","https://www.linkedin.com/in/kj001/","2026-03-24","Response Received — told me to work with CMO"],
+  ["Joveo","Shehzad","Karkhanawala","CMO","active","email",0,"","shehzad@joveo.com","","2026-03-24","Email Sent — referred by KJ"],
+  ["Joveo","Deb","Andrychuk","VP Sales","booked","linkedin",1,"(317) 340-5656","deborah.andrychuk@joveo.com","https://www.linkedin.com/in/debandrychuk/","2026-03-25","Meeting Booked — Meeting: 03/26/2026"],
+  ["Karat","Dormain","Drewitz","CMO","active","linkedin",0,"(415) 335-8463","","https://www.linkedin.com/in/dormain/",null,"Fractional CMO"],
+  ["Karat","Nathan","Rader","CRO","active","linkedin",0,"","nathan.rader@karat.com","",null,""],
+  ["Loxo","Matt","Chambers","CEO","active","linkedin",0,"","matt@loxo.co","https://www.linkedin.com/in/matt-chambers-8882036/",null,"Founder & CEO · Austin, TX"],
+  ["Metaview","Mark","Goldberger","VP Sales","active","linkedin",1,"(718) 755-5445","mark@metaview.ai","https://www.linkedin.com/in/mgoldberger/","2026-03-24","Response Received · San Francisco"],
+  ["Recruitics","Adam","Stafford","CEO","active","linkedin",0,"(937) 554-5100","","https://www.linkedin.com/in/adammstafford",null,"NYC"],
+  ["Recruitics","Warren","Hedgepeth","VP Sales","active","linkedin",2,"","Warren@recruitics.com","https://www.linkedin.com/in/warren-hedgepeth-93737545/","2026-03-24","Follow-Up 1 Sent · Richmond"],
+  ["RippleMatch","Audrey","Patenaude","CEO","active","linkedin",0,"(404) 883-7197","audrey@ripplematch.com","https://www.linkedin.com/in/apatenaude1",null,"NYC"],
+  ["SeekOut","Bala","Vishwanath","CMO","active","linkedin",0,"","","https://www.linkedin.com/in/balavishwanath",null,""],
+  ["SeekOut","Devon","Butterfield","VP Sales","active","linkedin",1,"(404) 550-5027","devon.butterfield@seekout.com","https://www.linkedin.com/in/ACoAAAS-hJUUBYq3bjtnUwU5nqDzc0YjD9v-PLOs/","2026-03-25","LI Message Sent · Georgia"],
+  ["SeekOut","Anoop","Gupta","CEO","active","linkedin",0,"(425) 894-8214","","https://www.linkedin.com/in/guptaanoop",null,"Bellevue, WA"],
+  ["SmartRecruiters","Steve","Hardy","CMO","active","linkedin",1,"917-325-1820","stevehardy72@gmail.com","https://www.linkedin.com/in/steve-hardy-cmo/","2026-03-25","LI Message Sent · NYC"],
+  ["SmartRecruiters","Rebecca","Carr","CEO","active","linkedin",0,"","r.carr@smartrecruiters.com","",null,""],
+  ["Spark Hire","Gary","Schwake","CRO","active","linkedin",0,"","gschwake@sparkhire.com","",null,""],
+  ["Spark Hire","Joshua (Josh)","Tolan","CEO","active","linkedin",0,"","jtolan@sparkhire.com","",null,""],
+  ["Talview","Sanjoe Tom","Jose","CEO","active","linkedin",1,"","sjose@talview.com","https://www.linkedin.com/in/sanjoetomjose/","2026-03-25","LI Message Sent · Oklahoma"],
+  ["Textio","Colleen","Gallagher","CEO","active","linkedin",0,"","colleen@textio.com","",null,""],
+  ["TiLT","Jennifer","Henderson","CEO","active","linkedin",0,"","","",null,""],
+  ["TiLT","Jessi","Johanson","CRO","active","linkedin",0,"","jessi@hellotilt.com","",null,""],
+  ["Yello","Michael","Megerian","CRO","active","linkedin",0,"","michael.megerian@yello.co","",null,""],
+  ["Yello","Dan","Bartfield","Other","active","linkedin",0,"","","https://www.linkedin.com/in/dbartfield/",null,"Co-Founder & President · Chicago"],
+  ["Zinfi Technologies","Sugata","Sanyal","CEO","active","linkedin",0,"","sugsan@zinfitech.com","",null,""],
+];
+
+function importContactsFromCSV(){
+  let added=0;
+  for(const row of CONTACT_IMPORT){
+    const [coName,firstName,lastName,title,status,channel,step,phone,email,linkedin,lastContact,notes]=row;
+    const co=companies.find(c=>c.name.toLowerCase().trim()===coName.toLowerCase().trim());
+    if(!co)continue;
+    const exists=contacts.some(ct=>ct.companyId===co.id&&ct.firstName.toLowerCase()===firstName.toLowerCase()&&ct.lastName.toLowerCase()===lastName.toLowerCase());
+    if(exists)continue;
+    contacts.push({
+      id:Date.now().toString(36)+Math.random().toString(36).slice(2)+'_'+firstName.slice(0,3),
+      companyId:co.id,firstName,lastName,title,status,channel,
+      step:parseInt(step)||0,phone,email,linkedin,
+      lastContact:lastContact||null,notes
+    });
+    added++;
+  }
+  if(added>0){saveData();render();}
+  return added;
+}
+
+function runImport(){
+  const n=importContactsFromCSV();
+  if(n>0)alert('Imported '+n+' contacts!');
+  else alert('All contacts already loaded — nothing new to import.');
+}
+
+function exportData(){
+  const payload=JSON.stringify({companies,contacts,exportedAt:new Date().toISOString()},null,2);
+  const blob=new Blob([payload],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='gds-tracker-backup-'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+function importData(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      const data=JSON.parse(ev.target.result);
+      if(!data.companies||!data.contacts)throw new Error('Invalid file format');
+      if(!confirm(`Replace current data with ${data.companies.length} companies, ${data.contacts.length} contacts? Exported: ${data.exportedAt||'unknown'}`))return;
+      companies=data.companies;contacts=data.contacts;
+      saveData();render();updateDashboardCRMStats();
+      alert('Data imported successfully!');
+    }catch(err){alert('Could not read file: '+err.message);}
+    e.target.value='';
+  };
+  reader.readAsText(file);
+}
+
+function migrateChannels(){
+  let changed=false;
+  for(const ct of contacts){
+    if(ct.channel==='optimized'){ct.channel='linkedin';if(ct.step>4)ct.step=4;changed=true;}
+  }
+  if(changed)saveData();
+}
+function migratePartnerFlags(){
+  let changed=false;
+  for(const co of companies){
+    if(co.isPartner===undefined&&isGDSPartner(co.name)){co.isPartner=true;changed=true;}
+  }
+  if(changed)saveData();
+}
+function seedIfEmpty(){
+  if(companies.length===0){
+    companies=SEED.map(c=>({...c,id:Date.now().toString(36)+Math.random().toString(36).slice(2)+'_'+c.name.slice(0,6).replace(/\s/g,''),notes:''}));
+    saveData();
+  }
+  if(contacts.length===0)importContactsFromCSV();
+}
+
+// ── Modal overlay close ───────────────────────────────────────────
+document.getElementById('coOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('coOverlay'))closeCoModal();});
+document.getElementById('ctOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('ctOverlay'))closeCtModal();});
+document.querySelectorAll('.filter-pill[data-filter]').forEach(b=>b.addEventListener('click',()=>setFilter(b.dataset.filter,b)));
+
+// ── CRM date label ────────────────────────────────────────────────
+const _dd=new Date();
+const crmDateEl=document.getElementById('crm-date-label');
+if(crmDateEl)crmDateEl.textContent=_dd.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+
+// ── INIT ──────────────────────────────────────────────────────────
+seedIfEmpty();
+migrateChannels();
+migratePartnerFlags();
+updateDashboardCRMStats();
+
+// ════════════════════════════════════════════════════════════════
+// TONE PICKER
+// ════════════════════════════════════════════════════════════════
+let _draftTone='auto';
+function setTone(tone,btn){
+  _draftTone=tone;
+  // Only update pills within the same panel/section as the clicked button
+  const container=btn.closest('.panel,.tone-row,.draft-section,.tone-group-wrap')||btn.parentElement;
+  container.querySelectorAll('.tone-pill').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+}
+function toneInstruction(){
+  const map={
+    auto:'READ the context carefully and automatically pick the right tone: use GDS outreach mode if it\'s a sales or work context; me mode if it\'s a friend or family text; spark mode if it\'s a personal context; or polished mode if it\'s a boss, mentor, or formal contact. Match their energy exactly.',
+    gds:'Use GDS outreach mode: peer-level, direct, one ask, name-drop 2 HR tech vendors, 2 specific day options to close.',
+    me:'Use casual text mode: short, direct, match their energy. Run-on sentences fine, no periods at end of texts, "haha" as softener, letter dragging like "realllll".',
+    spark:'Use spark mode: short, confident, playful energy — not try-hard. Slight wit. Never chase. Match the vibe. One message at a time.',
+    polished:'Use polished mode: "Hi [Name]" opener, complete sentences, warm but professional. "No worries", "Of course", "Perfect" as closers. No abbreviations.'
+  };
+  return map[_draftTone]||map.auto;
+}
+
+// ════════════════════════════════════════════════════════════════
+// GOOGLE OAUTH (Gmail + Calendar)
+// ════════════════════════════════════════════════════════════════
+
+// SETUP REQUIRED — replace this with your actual Google OAuth Client ID:
+// 1. Go to console.cloud.google.com
+// 2. Create a project → APIs & Services → Enable Gmail API + Google Calendar API
+// 3. Create credentials → OAuth 2.0 Client ID → Web Application
+// 4. Add your dashboard URL to "Authorized JavaScript Origins"
+// 5. Replace the value below with your Client ID
+const GOOGLE_CLIENT_ID='536538476597-3um6rc5055nddrbasauon0aoal8tnrvk.apps.googleusercontent.com';
+
+const SCOPES='https://www.googleapis.com/auth/gmail.modify https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/calendar.readonly';
+let tokenClient,gapiInited=false,gisInited=false,googleToken=null;
+
+function _gapiLoadedImpl(){
+  gapi.load('client',async()=>{
+    await gapi.client.init({});
+    await gapi.client.load('https://www.googleapis.com/discovery/v1/apis/gmail/v1/rest');
+    await gapi.client.load('https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest');
+    gapiInited=true;
+    maybeEnableConnect();
+  });
+}
+function _gisLoadedImpl(){
+  tokenClient=google.accounts.oauth2.initTokenClient({
+    client_id:GOOGLE_CLIENT_ID,
+    scope:SCOPES,
+    callback:async(resp)=>{
+      if(resp.error)return;
+      googleToken=resp.access_token;
+      safeSet('google_token',googleToken);
+      updateConnectBanner(true);
+    }
+  });
+  gisInited=true;
+  maybeEnableConnect();
+  const saved=safeGet('google_token','');
+  if(saved){googleToken=saved;updateConnectBanner(true);}
+}
+// Wire up stubs to real implementations
+window._gapiCb=_gapiLoadedImpl;
+window._gisCb=_gisLoadedImpl;
+if(window._gapiReady) _gapiLoadedImpl();
+if(window._gisReady) _gisLoadedImpl();
+
+// On page load, hide already-dismissed cards
+(async function applyDismissed(){
+  const dismissed = await loadDismissed();
+  if(!dismissed.length) return;
+  function hideDismissed(){
+    document.querySelectorAll('.msg-card').forEach(card=>{
+      const id = card.dataset.id || '';
+      if(id && dismissed.includes('email_'+id)){
+        card.style.display='none';
+      }
+    });
+    document.querySelectorAll('.sms-card').forEach(card=>{
+      const id = card.dataset.id || '';
+      if(id && dismissed.includes('sms_'+id)){
+        card.style.display='none';
+      }
+    });
+  }
+  // Run immediately and again after a delay to catch any late-rendered cards
+  hideDismissed();
+  setTimeout(hideDismissed, 500);
+  setTimeout(hideDismissed, 1500);
+})();
+
+function maybeEnableConnect(){
+  if(!gapiInited||!gisInited)return;
+  document.querySelectorAll('.connect-google-btn').forEach(b=>b.disabled=false);
+}
+
+function connectGoogle(){
+  if(!gapiInited||!gisInited){alert('Still loading Google libraries, try again in a second.');return;}
+  if(GOOGLE_CLIENT_ID==='YOUR_GOOGLE_CLIENT_ID'){
+    alert('Setup required: Replace YOUR_GOOGLE_CLIENT_ID in the code with your actual Google OAuth Client ID.\n\nGo to console.cloud.google.com → Create project → Enable Gmail & Calendar API → Create OAuth credentials → copy the Client ID.');
+    return;
+  }
+  tokenClient.requestAccessToken({prompt:''});
+}
+
+function disconnectGoogle(){
+  googleToken=null;
+  safeSet('google_token','');
+  updateConnectBanner(false);
+}
+
+function updateConnectBanner(connected){
+  const banner=document.getElementById('connect-banner');
+  const bannerText=document.getElementById('connect-banner-text');
+  if(!banner)return;
+  if(connected){
+    banner.style.background='color-mix(in srgb,var(--success) 8%,transparent)';
+    banner.style.borderColor='color-mix(in srgb,var(--success) 20%,transparent)';
+    bannerText.textContent='✓ Gmail + Calendar connected';
+    const btn=banner.querySelector('.connect-google-btn');
+    if(btn){btn.textContent='Disconnect';btn.onclick=disconnectGoogle;}
+  }else{
+    banner.style.background='';
+    banner.style.borderColor='';
+    bannerText.textContent='Connect Gmail + Calendar to see real data';
+    const btn=banner.querySelector('.connect-google-btn');
+    if(btn){btn.textContent='Connect →';btn.onclick=connectGoogle;}
+  }
+}
+
+// ── Backend URL ───────────────────────────────────────────────────
+const BACKEND_URL = 'https://alyssa-os-backend-production.up.railway.app';
+
+// ── Dismiss / Done ────────────────────────────────────────────────
+function getLocalDismissed(){
+  try{ return JSON.parse(localStorage.getItem('dismissed_ids')||'[]'); }catch(e){ return []; }
+}
+function saveLocalDismissed(id){
+  const arr = getLocalDismissed();
+  if(!arr.includes(id)){ arr.push(id); localStorage.setItem('dismissed_ids', JSON.stringify(arr)); }
+}
+
+async function saveDismissed(id){
+  saveLocalDismissed(id);
+  try{
+    await fetch(BACKEND_URL+'/api/dismissed',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({id})
+    });
+  }catch(e){ console.log('Could not save to backend',e); }
+}
+
+async function loadDismissed(){
+  const local = getLocalDismissed();
+  try{
+    const res = await fetch(BACKEND_URL+'/api/dismissed');
+    const data = await res.json();
+    const remote = data.dismissed || [];
+    // Merge local + remote
+    return [...new Set([...local, ...remote])];
+  }catch(e){ return local; }
+}
+
+
+
+// ══════════════════════════════════════════════════════════════════
+// CHAT PANEL
+// ══════════════════════════════════════════════════════════════════
+let chatHistory = [];
+let chatSending = false;
+
+function appendChatBubble(role, text, streaming) {
+  const container = document.getElementById('chat-messages');
+  const el = document.createElement('div');
+  el.className = 'chat-bubble ' + (role === 'user' ? 'user' : 'ai' + (streaming ? ' thinking' : ''));
+  el.textContent = text || (streaming ? '...' : '');
+  container.appendChild(el);
+  container.scrollTop = container.scrollHeight;
+  return el;
+}
+
+function chatKeydown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+}
+
+async function sendChat() {
+  if (chatSending) return;
+  const input = document.getElementById('chat-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+
+  const apiKey = safeGet('or_api_key', '');
+  if (!apiKey) {
+    openDraftDrawer('Set up AI', msg);
+    return;
+  }
+
+  input.value = '';
+  input.style.height = 'auto';
+  chatSending = true;
+  document.getElementById('chat-send-btn').disabled = true;
+
+  appendChatBubble('user', msg);
+  chatHistory.push({ role: 'user', content: msg });
+
+  const aiBubble = appendChatBubble('ai', '', true);
+
+  try {
+    const systemPrompt = await getSystemPrompt();
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + apiKey,
+        'HTTP-Referer': 'https://alyssa-james-os.netlify.app',
+        'X-Title': 'Alyssa OS'
+      },
+      body: JSON.stringify({
+        model: 'anthropic/claude-sonnet-4-5',
+        stream: true,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          ...chatHistory
+        ]
+      })
+    });
+
+    if (!res.ok) {
+      if (res.status === 401 || res.status === 403) { safeSet('or_api_key', ''); }
+      throw new Error('API error ' + res.status);
+    }
+
+    aiBubble.classList.remove('thinking');
+    aiBubble.textContent = '';
+    let fullText = '';
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n');
+      buf = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data:')) continue;
+        const d = line.slice(5).trim();
+        if (d === '[DONE]') break;
+        try {
+          const j = JSON.parse(d);
+          const t = j.choices?.[0]?.delta?.content || '';
+          if (t) { fullText += t; aiBubble.textContent = fullText; document.getElementById('chat-messages').scrollTop = 99999; }
+        } catch(e) {}
+      }
+    }
+    if (fullText) chatHistory.push({ role: 'assistant', content: fullText });
+    else aiBubble.textContent = 'No response. Try again.';
+  } catch(err) {
+    aiBubble.textContent = 'Something went wrong. Check your API key and try again.';
+  } finally {
+    chatSending = false;
+    document.getElementById('chat-send-btn').disabled = false;
+    input.focus();
+  }
+}
+
+function clearChat() {
+  chatHistory = [];
+  document.getElementById('chat-messages').innerHTML = '';
+}
+
+// ══════════════════════════════════════════════════════════════════
+// REPLY DRAFTER PANEL
+// ══════════════════════════════════════════════════════════════════
+async function _streamToReplyOutput(prompt) {
+  const out = document.getElementById('reply-output');
+  const copyRow = document.getElementById('reply-copy-row');
+  const apiKey = safeGet('or_api_key', '');
+  if (!apiKey) { openDraftDrawer('Set up AI', prompt); return; }
+
+  out.value = 'Drafting...';
+  copyRow.style.display = 'none';
+
+  try {
+    const systemPrompt = await getSystemPrompt();
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + apiKey,
+        'HTTP-Referer': 'https://alyssa-james-os.netlify.app',
+        'X-Title': 'Alyssa OS'
+      },
+      body: JSON.stringify({
+        model: 'anthropic/claude-sonnet-4-5',
+        stream: true,
+        messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: prompt }]
+      })
+    });
+    if (!res.ok) throw new Error('API error ' + res.status);
+    out.value = '';
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n'); buf = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data:')) continue;
+        const d = line.slice(5).trim();
+        if (d === '[DONE]') break;
+        try { const j = JSON.parse(d); const t = j.choices?.[0]?.delta?.content || ''; if (t) { out.value += t; out.scrollTop = out.scrollHeight; } } catch(e) {}
+      }
+    }
+    if (out.value.trim()) copyRow.style.display = 'flex';
+  } catch(err) {
+    out.value = 'Draft failed. Check your connection and try again.';
+  }
+}
+
+function draftReply() {
+  const msg = document.getElementById('reply-incoming').value.trim();
+  if (!msg) { alert('Paste their message first.'); return; }
+  const ctx = document.getElementById('reply-context').value.trim();
+  _streamToReplyOutput(
+    'Draft a reply to this message: "' + msg + '"' +
+    (ctx ? '. Context: ' + ctx + '.' : '') +
+    ' Match my voice exactly — casual if it feels casual, direct if professional. No filler, no em dashes, keep it short. ' + toneInstruction()
+  );
+}
+
+function draftReplyAlts() {
+  const msg = document.getElementById('reply-incoming').value.trim();
+  if (!msg) { alert('Paste their message first.'); return; }
+  const ctx = document.getElementById('reply-context').value.trim();
+  _streamToReplyOutput(
+    'Give me 3 different reply options for this message: "' + msg + '"' +
+    (ctx ? '. Context: ' + ctx + '.' : '') +
+    ' Label them Option 1, Option 2, Option 3. Each should be a different tone or angle but all in my voice. No filler, no em dashes. ' + toneInstruction()
+  );
+}
+
+function copyReplyOutput() {
+  const val = document.getElementById('reply-output').value.trim();
+  if (!val) return;
+  navigator.clipboard.writeText(val).then(() => {
+    const b = event.target; const o = b.textContent; b.textContent = 'Copied!'; setTimeout(() => b.textContent = o, 1500);
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════
+// MILE AWAY STOWE PANEL
+// ══════════════════════════════════════════════════════════════════
+const MAS_BRAND_PROMPT = `You are the Instagram content strategist for Mile Away Stowe — a luxury vacation rental on Mountain Road in Stowe, Vermont, exactly one mile from the Mount Mansfield ski lifts.
+
+PROPERTY HIGHLIGHTS:
+- Modern farmhouse: historic New England charm + high-end contemporary comfort
+- Three-season porch with double-sided stone fireplace
+- Outdoor hot tub under string lights, fire pit, river on the property
+- Two full kitchens, heated floors, heated towel racks
+- Separate guest house over the garage (ideal for multi-family groups)
+- EV charger, Parachute & Brooklinen luxury linens, every toiletry stocked
+- 1 mile to Stowe Mountain Resort lifts, minutes to downtown Stowe, Smugglers' Notch, Bingham Falls
+- Host: Amy — hands-on, responsive, thoughtful
+
+BRAND VOICE:
+Warm, aspirational, genuinely authentic. Never corporate, never salesy. Write to couples, families, and friend groups (ages 28-55) from Boston, NYC, and Connecticut who want a real Vermont escape. Every caption should feel like a note from a friend who just stayed there. Luxury without pretension. Reference Stowe specifically.
+
+GOAL: Every post makes the reader feel they're missing out right now. Drive direct bookings at mileawaystowe.com.`;
+
+let masPhotos = [];
+let masSeasonVal = 'winter';
+
+function masSetSeason(season, btn) {
+  masSeasonVal = season;
+  document.querySelectorAll('.mas-season-chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function masHandleDrop(e, type) {
+  e.preventDefault();
+  const zone = document.getElementById('mas-drop-zone');
+  if (type === 'over') { zone.classList.add('drag-over'); return; }
+  if (type === 'leave') { zone.classList.remove('drag-over'); return; }
+  zone.classList.remove('drag-over');
+  if (e.dataTransfer?.files?.length) masHandleFiles(e.dataTransfer.files);
+}
+
+function masHandleFiles(files) {
+  const remaining = 6 - masPhotos.length;
+  const toAdd = Array.from(files).slice(0, remaining);
+  toAdd.forEach(file => {
+    if (!file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      masPhotos.push({ dataUrl: ev.target.result, name: file.name });
+      renderMASPhotos();
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function masRemovePhoto(idx) {
+  masPhotos.splice(idx, 1);
+  renderMASPhotos();
+}
+
+function renderMASPhotos() {
+  const grid = document.getElementById('mas-photo-grid');
+  grid.innerHTML = masPhotos.map((p, i) => `
+    <div class="mas-thumb">
+      <img src="${p.dataUrl}" alt="photo ${i+1}">
+      <button class="mas-thumb-rm" onclick="masRemovePhoto(${i})">✕</button>
+    </div>`).join('');
+}
+
+function masClearAll() {
+  masPhotos = [];
+  renderMASPhotos();
+  document.getElementById('mas-prompt').value = '';
+  document.getElementById('mas-result').value = '';
+  document.getElementById('mas-copy-row').style.display = 'none';
+}
+
+function copyMASResult() {
+  const val = document.getElementById('mas-result').value.trim();
+  if (!val) return;
+  navigator.clipboard.writeText(val).then(() => {
+    const b = event.target; const o = b.textContent; b.textContent = 'Copied!'; setTimeout(() => b.textContent = o, 1500);
+  });
+}
+
+async function generateMASContent() {
+  const promptText = document.getElementById('mas-prompt').value.trim();
+  const out = document.getElementById('mas-result');
+  const copyRow = document.getElementById('mas-copy-row');
+  const apiKey = safeGet('or_api_key', '');
+
+  if (!apiKey) { openDraftDrawer('Set up AI', promptText || 'Generate MAS content'); return; }
+
+  out.value = 'Generating...';
+  copyRow.style.display = 'none';
+
+  // Build user message — include photo descriptions if photos were uploaded
+  let userMsg = 'Generate Instagram content for a post';
+  if (promptText) userMsg += ' about: ' + promptText;
+  userMsg += '. Season: ' + masSeasonVal + '.';
+  if (masPhotos.length) userMsg += ' I have attached ' + masPhotos.length + ' photo(s) of the property.';
+  userMsg += '\n\nPlease provide:\n1. Main caption (2-4 sentences, no hashtags)\n2. 2 alt caption variations\n3. 20-25 hashtags\n4. 3 song suggestions for a Reel\n5. 2 CTA ideas for Stories';
+
+  try {
+    // Build messages array — include images if provided
+    const userContent = masPhotos.length
+      ? [
+          { type: 'text', text: userMsg },
+          ...masPhotos.map(p => ({ type: 'image_url', image_url: { url: p.dataUrl } }))
+        ]
+      : userMsg;
+
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + apiKey,
+        'HTTP-Referer': 'https://alyssa-james-os.netlify.app',
+        'X-Title': 'Alyssa OS'
+      },
+      body: JSON.stringify({
+        model: 'anthropic/claude-sonnet-4-5',
+        stream: true,
+        messages: [
+          { role: 'system', content: MAS_BRAND_PROMPT },
+          { role: 'user', content: userContent }
+        ]
+      })
+    });
+    if (!res.ok) throw new Error('API error ' + res.status);
+    out.value = '';
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n'); buf = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data:')) continue;
+        const d = line.slice(5).trim();
+        if (d === '[DONE]') break;
+        try { const j = JSON.parse(d); const t = j.choices?.[0]?.delta?.content || ''; if (t) { out.value += t; out.scrollTop = out.scrollHeight; } } catch(e) {}
+      }
+    }
+    if (out.value.trim()) copyRow.style.display = 'flex';
+  } catch(err) {
+    out.value = 'Generation failed. Check your connection and try again.';
+  }
+}
+
+// Set default season chip on load
+(function initMAS() {
+  const defaultChip = document.querySelector('.mas-season-chip[data-season="winter"]');
+  if (defaultChip) defaultChip.classList.add('active');
+})();
+
+</script>
+</body>
+</html>
